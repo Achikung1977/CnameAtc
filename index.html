@@ -3,12 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ระบบเช็คชื่อเข้าร่วมกิจกรรม - Event Attendance System</title>
-    
-    <!-- Google Fonts (Kanit) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>ระบบเช็คชื่อเข้าร่วมกิจกรรม</title>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,29 +11,38 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Kanit', 'sans-serif'],
-                    },
                     colors: {
                         brand: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            500: '#0284c7',
-                            600: '#0284c7',
-                            700: '#0369a1',
-                            800: '#075985',
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            accent: '#4f46e5'
                         }
+                    },
+                    fontFamily: {
+                        sans: ['Kanit', 'sans-serif']
                     }
                 }
             }
         }
     </script>
     
-    <!-- Font Awesome Icons -->
+    <!-- Google Fonts: Kanit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Chart.js for Visual Stats -->
+    <!-- Chart.js for Dashboard Visuals -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Toastify for Modern Notifications -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     <style>
         body {
@@ -46,433 +50,315 @@
             -webkit-tap-highlight-color: transparent;
         }
         
-        /* Highlight edited text in red */
-        .text-edited {
-            color: #e53e3e !important;
-            font-weight: 700 !important;
-            position: relative;
-        }
-        .text-edited::after {
-            content: '*';
-            color: #e53e3e;
-            margin-left: 2px;
-            font-size: 0.8em;
+        .edited-cell-highlight {
+            color: #ef4444 !important; /* Red color for edited cells */
+            font-weight: 600;
         }
 
-        /* Glassmorphism effects */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-        }
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
+        .custom-scrollbar::-webkit-scrollbar {
             height: 6px;
+            width: 6px;
         }
-        ::-webkit-scrollbar-track {
+        .custom-scrollbar::-webkit-scrollbar-track {
             background: #f1f5f9;
+            border-radius: 4px;
         }
-        ::-webkit-scrollbar-thumb {
+        .custom-scrollbar::-webkit-scrollbar-thumb {
             background: #cbd5e1;
-            border-radius: 9999px;
+            border-radius: 4px;
         }
-        
-        /* Smooth transitions */
-        .transition-all-200 {
-            transition: all 0.2s ease-in-out;
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
         }
     </style>
 </head>
-<body class="h-full flex flex-col text-slate-800 pb-20 md:pb-8">
+<body class="h-full bg-slate-100 text-slate-800 flex flex-col min-h-screen selection:bg-brand-500 selection:text-white">
 
     <!-- Top Navigation Header -->
-    <header class="sticky top-0 z-30 bg-indigo-900 text-white shadow-lg">
+    <header class="sticky top-0 z-30 bg-indigo-900 text-white shadow-md border-b border-indigo-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                <!-- App Title / Logo -->
+                <!-- App Title & Event Info -->
                 <div class="flex items-center space-x-3">
-                    <div class="p-2 bg-indigo-700/60 rounded-xl text-indigo-200">
-                        <i class="fa-solid fa-clipboard-user text-xl"></i>
+                    <div class="p-2 bg-indigo-800 rounded-xl border border-indigo-700 shadow-inner">
+                        <i class="fa-solid fa-clipboard-user text-xl text-emerald-400"></i>
                     </div>
                     <div>
-                        <h1 class="font-bold text-lg leading-tight">ระบบเช็คชื่อเข้าร่วมกิจกรรม</h1>
-                        <p class="text-xs text-indigo-200 flex items-center gap-1">
-                            <span id="connection-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
-                            <span id="connection-status-text">โหมดข้อมูลจำลอง (Demo Mode)</span>
+                        <h1 class="text-lg font-bold tracking-wide text-white leading-tight">ระบบเช็คชื่อเข้าร่วมกิจกรรม</h1>
+                        <p id="eventTitleDisplay" class="text-xs text-indigo-200 flex items-center gap-1 font-light">
+                            <i class="fa-solid fa-calendar-star text-amber-300"></i>
+                            <span id="eventNameText">กำลังโหลดชื่อกิจกรรม...</span>
                         </p>
                     </div>
                 </div>
 
                 <!-- Action Controls -->
-                <div class="flex items-center space-x-2">
-                    <button onclick="refreshData()" class="p-2 text-indigo-200 hover:text-white hover:bg-indigo-800 rounded-lg transition" title="รีเฟรชข้อมูล">
-                        <i id="refresh-icon" class="fa-solid fa-arrows-rotate"></i>
+                <div class="flex items-center gap-2">
+                    <button onclick="fetchData(true)" title="รีเฟรชข้อมูล" class="p-2 text-indigo-200 hover:text-white hover:bg-indigo-800 rounded-lg transition">
+                        <i id="refreshSpinner" class="fa-solid fa-rotate"></i>
                     </button>
-                    <button onclick="openConfigModal()" class="px-3 py-1.5 bg-indigo-800 hover:bg-indigo-700 text-xs font-medium rounded-lg border border-indigo-600/50 flex items-center gap-1.5 transition">
-                        <i class="fa-solid fa-plug text-indigo-300"></i>
-                        <span class="hidden sm:inline">เชื่อมต่อ Google Sheet</span>
+                    <button onclick="openApiModal()" class="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-medium text-xs rounded-lg transition shadow-sm">
+                        <i class="fa-solid fa-plug"></i>
+                        <span class="hidden sm:inline">ตั้งค่า Google Sheets</span>
                     </button>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Event Banner (Loaded from 'act' sheet A1:A2) -->
-    <section class="bg-gradient-to-r from-indigo-800 via-indigo-700 to-sky-700 text-white py-5 px-4 shadow-inner">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <div>
-                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/10 text-xs font-light backdrop-blur-md mb-1 text-indigo-100">
-                    <i class="fa-regular fa-calendar-check text-amber-300"></i> กิจกรรมปัจจุบัน
-                </div>
-                <h2 id="event-title" class="text-xl md:text-2xl font-bold tracking-tight">โครงการปฐมนิเทศและสัมมนาผู้เรียน ประจำปีการศึกษา 2567</h2>
-                <p id="event-subtitle" class="text-xs md:text-sm text-indigo-100/90 mt-0.5">ณ หอประชุมใหญ่ วิทยาลัยการอาชีพ | เวลา 08:30 - 16:30 น.</p>
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 space-y-5">
+
+        <!-- Status & Sync Notice Bar -->
+        <div id="demoNoticeBar" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-2 shadow-sm text-xs text-amber-800">
+            <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 bg-amber-200 text-amber-900 rounded font-bold uppercase text-[10px]">โหมดทดสอบ</span>
+                <span>แสดงข้อมูลจำลอง (ยังไม่ได้เชื่อมต่อ Google Sheets)</span>
             </div>
-            <div class="flex items-center gap-2 self-start md:self-auto text-xs bg-white/10 px-3 py-1.5 rounded-lg border border-white/10">
-                <i class="fa-solid fa-database text-amber-300"></i>
-                <span class="text-indigo-100">Sheet ID:</span>
-                <span class="font-mono text-white select-all">1JaRmJrsninnCj6DmlysrnXeSghOUjPgg3ZLN0znqULc</span>
+            <button onclick="openApiModal()" class="text-indigo-700 font-semibold hover:underline flex items-center gap-1">
+                คลิกเพื่อเชื่อมต่อ Google Apps Script URL <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+
+        <!-- 1. DASHBOARD OVERVIEW SECTION -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <!-- Summary Counters -->
+            <div class="lg:col-span-2 grid grid-cols-2 sm:grid-cols-2 gap-3">
+                <!-- Total Students Card -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+                    <div class="absolute -right-3 -bottom-3 text-slate-100 text-7xl font-bold select-none pointer-events-none">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">นักศึกษาทั้งหมด</span>
+                        <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><i class="fa-solid fa-user-group"></i></span>
+                    </div>
+                    <div class="mt-2">
+                        <div class="text-3xl font-extrabold text-slate-900" id="totalStudentsCount">0</div>
+                        <p class="text-[11px] text-slate-500 mt-1" id="totalByClassSummary">แยกตามระดับชั้น: -</p>
+                    </div>
+                </div>
+
+                <!-- Attended Students Card -->
+                <div class="bg-white p-4 rounded-2xl border border-emerald-100 shadow-sm relative overflow-hidden flex flex-col justify-between bg-gradient-to-br from-white to-emerald-50/40">
+                    <div class="absolute -right-3 -bottom-3 text-emerald-100 text-7xl font-bold select-none pointer-events-none">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-emerald-700 uppercase tracking-wider">เข้าร่วมกิจกรรมแล้ว</span>
+                        <span class="p-2 bg-emerald-100 text-emerald-600 rounded-lg"><i class="fa-solid fa-user-check"></i></span>
+                    </div>
+                    <div class="mt-2">
+                        <div class="text-3xl font-extrabold text-emerald-600" id="attendedStudentsCount">0</div>
+                        <p class="text-[11px] text-emerald-700/80 mt-1" id="attendedByClassSummary">แยกตามระดับชั้น: -</p>
+                    </div>
+                </div>
+
+                <!-- Breakdown by Level (Detailed Grid) -->
+                <div class="col-span-2 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                        <i class="fa-solid fa-chart-pie text-indigo-500"></i> สรุปการเข้าร่วมรายระดับชั้น (คอลัมน์ G)
+                    </h3>
+                    <div id="classLevelStatsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-xs">
+                        <!-- Dynamic Stats Cards Inserted Here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Card -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center min-h-[220px]">
+                <div class="w-full h-44 relative">
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. CLASS LEVEL BUTTON FILTERS (Col G) -->
+        <section class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+            <div class="flex items-center justify-between">
+                <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-filter text-indigo-600"></i> เลือกระดับชั้นเพื่อเรียกดูข้อมูล (คอลัมน์ G)
+                </label>
+                <span class="text-[11px] text-slate-400">คลิกปุ่มเพื่อกรองตามระดับชั้น</span>
+            </div>
+            
+            <div id="classButtonsContainer" class="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar">
+                <!-- Dynamic Buttons generated from Column G values -->
+                <button onclick="filterByClass('ALL')" class="class-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 whitespace-nowrap bg-indigo-600 text-white shadow-sm" data-class="ALL">
+                    <i class="fa-solid fa-list-ul"></i> ระดับชั้นทั้งหมด
+                </button>
+            </div>
+        </section>
+
+        <!-- ACTIVE FILTER STATUS BANNER -->
+        <div id="activeClassBanner" class="bg-indigo-50 border border-indigo-100 rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-indigo-900">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-indigo-700" id="selectedClassName">แสดงระดับชั้น: ทั้งหมด</span>
+                <span class="text-slate-400">|</span>
+                <span>จำนวนนักศึกษาทั้งหมด: <strong id="filterTotalCount">0</strong> คน</span>
+                <span class="text-slate-400">|</span>
+                <span>เข้าร่วม: <strong id="filterAttendedCount" class="text-emerald-600">0</strong> คน</span>
+            </div>
+            <div class="text-[11px] text-indigo-600 font-normal">
+                อัตราการเข้าร่วม: <span id="filterPercentage" class="font-bold text-emerald-600">0%</span>
             </div>
         </div>
-    </section>
 
-    <!-- Main Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-5 space-y-6">
-
-        <!-- DASHBOARD OVERVIEW SECTION -->
-        <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            
-            <!-- Total Students Card -->
-            <div class="glass-card rounded-2xl p-4 shadow-sm border-l-4 border-l-blue-500 relative overflow-hidden">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">ยอดรวมนักศึกษาทั้งหมด</p>
-                        <h3 id="stat-total-count" class="text-3xl font-extrabold text-slate-800 mt-1">0</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">คนในระบบ</p>
-                    </div>
-                    <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                        <i class="fa-solid fa-users text-2xl"></i>
-                    </div>
-                </div>
-                <!-- Breakdown list by class -->
-                <div class="mt-4 pt-3 border-t border-slate-100">
-                    <p class="text-xs font-medium text-slate-600 mb-2 flex items-center justify-between">
-                        <span>ย่อยตามระดับชั้น</span>
-                        <i class="fa-solid fa-layer-group text-slate-400 text-[10px]"></i>
-                    </p>
-                    <div id="breakdown-total-class" class="grid grid-cols-2 gap-1.5 text-xs">
-                        <!-- Dynamic content -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Attended Students Card -->
-            <div class="glass-card rounded-2xl p-4 shadow-sm border-l-4 border-l-emerald-500 relative overflow-hidden">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">เข้าร่วมกิจกรรมแล้ว</p>
-                        <div class="flex items-baseline gap-2 mt-1">
-                            <h3 id="stat-attended-count" class="text-3xl font-extrabold text-emerald-600">0</h3>
-                            <span id="stat-attended-percent" class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">(0%)</span>
-                        </div>
-                        <p class="text-xs text-slate-500 mt-0.5">เช็คชื่อแล้วเรียบร้อย</p>
-                    </div>
-                    <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-                        <i class="fa-solid fa-user-check text-2xl"></i>
-                    </div>
-                </div>
-                <!-- Breakdown list by class -->
-                <div class="mt-4 pt-3 border-t border-slate-100">
-                    <p class="text-xs font-medium text-slate-600 mb-2 flex items-center justify-between">
-                        <span>เข้าร่วมย่อยตามระดับชั้น</span>
-                        <i class="fa-solid fa-chart-pie text-slate-400 text-[10px]"></i>
-                    </p>
-                    <div id="breakdown-attended-class" class="grid grid-cols-2 gap-1.5 text-xs">
-                        <!-- Dynamic content -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Visual Chart / Progress Card -->
-            <div class="glass-card rounded-2xl p-4 shadow-sm flex flex-col justify-between">
-                <div class="flex items-center justify-between mb-2">
-                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider">สัดส่วนการเข้าร่วม</h4>
-                    <span id="active-filter-badge" class="text-[11px] font-medium bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">แสดงทั้งหมด</span>
-                </div>
-                <div class="flex-1 min-h-[130px] flex items-center justify-center relative">
-                    <canvas id="attendanceChart" class="max-h-[140px]"></canvas>
-                </div>
-                <div class="mt-2 text-center">
-                    <span id="stat-pending-count" class="text-xs font-medium text-amber-600">ยังไม่เข้าร่วม 0 คน</span>
-                </div>
-            </div>
-
-        </section>
-
-
-        <!-- CLASS LEVEL FILTER BUTTONS SECTION -->
-        <section class="space-y-3">
-            <div class="flex items-center justify-between">
-                <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2">
-                    <i class="fa-solid fa-filter text-indigo-600"></i>
-                    เลือกระดับชั้นเพื่อเรียกดูข้อมูล
-                </h3>
-                <span class="text-xs text-slate-500">คลิกปุ่มเพื่อกรองตามระดับชั้น</span>
-            </div>
-
-            <!-- Horizontal Scrollable Class Filter Buttons -->
-            <div id="class-filter-container" class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-                <!-- Generated dynamically, e.g. [ทั้งหมด], [ปวช.1], [ปวช.2], [ปวช.3], [ปวส.1], [ปวส.2] -->
-            </div>
-        </section>
-
-
-        <!-- SELECTED CLASS SUMMARY BANNER (Shown when a specific class is selected) -->
-        <section id="class-summary-banner" class="hidden bg-indigo-50 border border-indigo-100 rounded-xl p-4 transition-all">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-base shadow">
-                        <i class="fa-solid fa-graduation-cap"></i>
-                    </div>
-                    <div>
-                        <h4 id="class-banner-title" class="text-base font-bold text-indigo-950">สรุปข้อมูลระดับชั้น: ปวช.1</h4>
-                        <p class="text-xs text-indigo-600">สถิติเฉพาะระดับชั้นที่เลือก</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-4 text-xs font-medium bg-white/80 px-3 py-2 rounded-lg border border-indigo-100">
-                    <div class="text-center">
-                        <span class="block text-slate-400 text-[10px]">ยอดนักศึกษา</span>
-                        <span id="class-banner-total" class="font-bold text-slate-800 text-sm">0</span>
-                    </div>
-                    <div class="h-6 w-px bg-slate-200"></div>
-                    <div class="text-center">
-                        <span class="block text-emerald-600 text-[10px]">เข้าร่วมแล้ว</span>
-                        <span id="class-banner-attended" class="font-bold text-emerald-600 text-sm">0</span>
-                    </div>
-                    <div class="h-6 w-px bg-slate-200"></div>
-                    <div class="text-center">
-                        <span class="block text-amber-600 text-[10px]">ยังไม่เข้าร่วม</span>
-                        <span id="class-banner-pending" class="font-bold text-amber-600 text-sm">0</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-
-        <!-- SEARCH & STATUS FILTERS BAR -->
-        <section class="glass-card rounded-2xl p-3 shadow-sm space-y-3">
-            <div class="flex flex-col md:flex-row gap-3 items-center justify-between">
-                
-                <!-- Search Input Box -->
-                <div class="relative w-full md:w-80">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    <input type="text" id="search-input" onkeyup="filterStudents()" placeholder="ค้นหาชื่อ, นามสกุล, รหัสนักศึกษา, เลขที่..." 
-                           class="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
-                    <button id="clear-search" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
+        <!-- 3. SEARCH & TABLE CONTROL BAR -->
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <!-- Search & Filter Options -->
+            <div class="p-3 sm:p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row gap-3 items-center justify-between">
+                <!-- Search Input -->
+                <div class="relative w-full sm:w-80">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="searchInput" oninput="handleSearch()" placeholder="ค้นหาชื่อ, นามสกุล, รหัสนักศึกษา, เบอร์โทร..." 
+                        class="w-full pl-9 pr-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition shadow-sm">
                 </div>
 
                 <!-- Status Filter Pills -->
-                <div class="flex items-center gap-1.5 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-                    <button onclick="setStatusFilter('ALL')" id="filter-status-all" class="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800 text-white shadow-sm transition">
-                        ทั้งหมด (<span id="cnt-status-all">0</span>)
+                <div class="flex items-center gap-1 bg-slate-200/60 p-1 rounded-xl w-full sm:w-auto text-xs">
+                    <button onclick="setStatusFilter('ALL')" id="statusFilterALL" class="status-pill flex-1 sm:flex-none px-3 py-1 rounded-lg text-xs font-medium transition bg-slate-800 text-white shadow-xs">
+                        ทั้งหมด (<span id="countPillAll">0</span>)
                     </button>
-                    <button onclick="setStatusFilter('ATTENDED')" id="filter-status-attended" class="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 transition">
-                        <i class="fa-solid fa-circle-check text-emerald-500 mr-1"></i>เข้าร่วม (<span id="cnt-status-attended">0</span>)
+                    <button onclick="setStatusFilter('CHECKED')" id="statusFilterCHECKED" class="status-pill flex-1 sm:flex-none px-3 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition">
+                        <i class="fa-solid fa-check text-emerald-500 mr-1"></i>เข้าร่วม (<span id="countPillChecked">0</span>)
                     </button>
-                    <button onclick="setStatusFilter('PENDING')" id="filter-status-pending" class="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-600 hover:bg-amber-50 hover:text-amber-700 transition">
-                        <i class="fa-regular fa-clock text-amber-500 mr-1"></i>ยังไม่เข้าร่วม (<span id="cnt-status-pending">0</span>)
+                    <button onclick="setStatusFilter('UNCHECKED')" id="statusFilterUNCHECKED" class="status-pill flex-1 sm:flex-none px-3 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition">
+                        <i class="fa-solid fa-clock text-amber-500 mr-1"></i>ยังไม่เข้าร่วม (<span id="countPillUnchecked">0</span>)
                     </button>
-                </div>
-
-            </div>
-        </section>
-
-
-        <!-- STUDENT DATA TABLE / MOBILE CARDS VIEW -->
-        <section class="space-y-3">
-            <div class="flex items-center justify-between px-1">
-                <span class="text-xs text-slate-500 font-medium" id="search-result-count">แสดงข้อมูล 0 รายการ</span>
-                <span class="text-[11px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 flex items-center gap-1">
-                    <i class="fa-solid fa-circle-info"></i> ข้อมูลที่แก้ไขจะแสดงด้วย<span class="text-red-600 font-bold">ตัวอักษรสีแดง</span>
-                </span>
-            </div>
-
-            <!-- Desktop / Tablet Table View (Hidden on Small Screens) -->
-            <div class="hidden md:block glass-card rounded-2xl shadow-sm overflow-hidden border border-slate-200">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-xs">
-                        <thead>
-                            <tr class="bg-slate-100/80 text-slate-600 font-semibold border-b border-slate-200">
-                                <th class="p-3 w-12 text-center">เลขที่</th>
-                                <th class="p-3 w-28">รหัสนักศึกษา</th>
-                                <th class="p-3">คำนำหน้า</th>
-                                <th class="p-3">ชื่อ</th>
-                                <th class="p-3">นามสกุล</th>
-                                <th class="p-3 w-20 text-center">ระดับชั้น</th>
-                                <th class="p-3 w-28 text-center">สถานะ</th>
-                                <th class="p-3">หมายเหตุ</th>
-                                <th class="p-3 w-36 text-center">การจัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="student-table-body" class="divide-y divide-slate-100">
-                            <!-- Dynamic Table Rows -->
-                        </tbody>
-                    </table>
                 </div>
             </div>
 
-            <!-- Mobile Cards View (Shown on Small Screens) -->
-            <div id="student-mobile-cards" class="md:hidden space-y-2.5">
-                <!-- Dynamic Mobile Cards -->
+            <!-- Table Info Header -->
+            <div class="px-4 py-2.5 bg-slate-100/70 border-b border-slate-200 text-xs text-slate-600 flex items-center justify-between">
+                <div>
+                    แสดงข้อมูล <span id="showingCount" class="font-bold text-slate-800">0</span> รายการ
+                </div>
+                <div class="text-[11px] text-amber-700 font-medium bg-amber-50 px-2 py-0.5 rounded border border-amber-200 flex items-center gap-1">
+                    <i class="fa-solid fa-circle-info"></i> ข้อมูลที่แก้ไขจะแสดงด้วย <span class="text-red-600 font-bold">ตัวอักษรสีแดง</span>
+                </div>
+            </div>
+
+            <!-- Student Data Table (Desktop View) -->
+            <div class="hidden md:block overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider">
+                            <th class="py-3 px-3 text-center w-12">เลขที่</th>
+                            <th class="py-3 px-3">รหัสนักศึกษา</th>
+                            <th class="py-3 px-3">คำนำหน้า</th>
+                            <th class="py-3 px-3">ชื่อ</th>
+                            <th class="py-3 px-3">นามสกุล</th>
+                            <th class="py-3 px-3">เบอร์โทรศัพท์ (Col F)</th>
+                            <th class="py-3 px-3">ระดับชั้น (Col G)</th>
+                            <th class="py-3 px-3 text-center">สถานะ (Col H)</th>
+                            <th class="py-3 px-3">หมายเหตุ (Col I)</th>
+                            <th class="py-3 px-3 text-center w-36">การจัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody" class="divide-y divide-slate-100">
+                        <!-- Dynamic Student Rows -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile ListView (Optimized for Mobile Screens) -->
+            <div id="studentMobileList" class="block md:hidden divide-y divide-slate-100">
+                <!-- Mobile Student Cards dynamically rendered -->
             </div>
 
             <!-- Empty State -->
-            <div id="empty-state" class="hidden glass-card rounded-2xl p-8 text-center space-y-3">
-                <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto text-xl">
-                    <i class="fa-solid fa-user-slash"></i>
-                </div>
-                <p class="text-sm font-medium text-slate-600">ไม่พบข้อมูลนักศึกษาตรงตามเงื่อนไข</p>
-                <button onclick="resetFilters()" class="text-xs text-indigo-600 font-medium hover:underline">รีเซ็ตการค้นหาและตัวกรอง</button>
+            <div id="emptyState" class="hidden p-8 text-center text-slate-400">
+                <i class="fa-solid fa-folder-open text-4xl mb-2 text-slate-300"></i>
+                <p class="text-xs">ไม่พบข้อมูลนักศึกษาตรงตามเงื่อนไข</p>
             </div>
         </section>
-
     </main>
 
     <!-- FOOTER -->
-    <footer class="bg-white border-t border-slate-200 py-4 mt-auto text-center text-xs text-slate-500">
-        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <p>© 2026 ระบบเช็คชื่อเข้าร่วมกิจกรรม - Google Sheets Integration</p>
-            <p class="text-[11px] text-slate-400">พัฒนาสำหรับ GitHub Pages & Google Apps Script Backend</p>
+    <footer class="mt-auto bg-slate-800 text-slate-400 text-[11px] py-4 border-t border-slate-700 text-center">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>ระบบเช็คชื่อเข้าร่วมกิจกรรม • เชื่อมต่อฐานข้อมูล Google Sheets</p>
+            <p class="text-slate-500 mt-1">Spreadsheet ID: <code class="text-slate-400">1JaRmJrsninnCj6DmlysrnXeSghOUjPgg3ZLN0znqULc</code></p>
         </div>
     </footer>
 
-
-    <!-- MODAL 1: ATTENDANCE & REMARK CHECK-IN MODAL -->
-    <div id="attendance-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity">
-        <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4 border border-slate-100 transform transition-all scale-100">
-            <div class="flex items-center justify-between border-b pb-3">
-                <div class="flex items-center gap-2 text-emerald-600">
-                    <i class="fa-solid fa-user-check text-lg"></i>
-                    <h3 class="font-bold text-slate-800 text-base">บันทึกการเข้าร่วมกิจกรรม</h3>
-                </div>
-                <button onclick="closeAttendanceModal()" class="text-slate-400 hover:text-slate-600 p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
+    <!-- MODAL 1: EDIT STUDENT INFO (Cols B, C, D, F, G) -->
+    <div id="editModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden transform transition-all">
+            <!-- Modal Header -->
+            <div class="bg-slate-800 text-white p-4 flex items-center justify-between">
+                <h3 class="font-bold text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-user-pen text-amber-400"></i> แก้ไขข้อมูลนักศึกษา
+                </h3>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
+            
+            <!-- Modal Body -->
+            <form id="editForm" onsubmit="saveStudentInfo(event)" class="p-4 space-y-3.5 text-xs">
+                <input type="hidden" id="editStudentId">
+                <input type="hidden" id="editRowIndex">
 
-            <div id="attendance-modal-student-info" class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1 text-xs">
-                <!-- Info populated dynamically -->
-            </div>
-
-            <form id="attendance-form" onsubmit="handleAttendanceSubmit(event)" class="space-y-3">
-                <input type="hidden" id="att-student-id">
-                
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">สถานะการเข้าร่วม</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <label class="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-800 font-medium text-xs cursor-pointer hover:bg-emerald-100 transition">
-                            <input type="radio" name="att-status" value="เข้าร่วม" checked class="text-emerald-600 focus:ring-emerald-500">
-                            <i class="fa-solid fa-circle-check text-emerald-600"></i> เข้าร่วมกิจกรรม
-                        </label>
-                        <label class="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-slate-300 bg-slate-50 text-slate-700 font-medium text-xs cursor-pointer hover:bg-slate-100 transition">
-                            <input type="radio" name="att-status" value="ยังไม่เข้าร่วม" class="text-slate-600 focus:ring-slate-500">
-                            <i class="fa-regular fa-circle text-slate-400"></i> ยังไม่เข้าร่วม
-                        </label>
-                    </div>
+                <div class="bg-amber-50 border border-amber-200 text-amber-800 p-2.5 rounded-xl text-[11px] flex items-start gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-600 mt-0.5"></i>
+                    <span>เมื่อแก้ไขข้อมูล ช่องที่มีการแก้ไขจะเปลี่ยนสีตัวอักษรเป็น<strong class="text-red-600">สีแดง</strong>เพื่อระบุว่ามีการเปลี่ยนแปลง</span>
                 </div>
 
-                <div>
-                    <label for="att-remark" class="block text-xs font-semibold text-slate-700 mb-1">หมายเหตุ (Col H)</label>
-                    <textarea id="att-remark" rows="2" placeholder="เช่น มาสาย, ตัวแทนห้อง, นำเสนอผลงาน..." 
-                              class="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
-                </div>
-
-                <div class="flex gap-2 pt-2">
-                    <button type="button" onclick="closeAttendanceModal()" class="w-1/2 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium text-xs hover:bg-slate-50">ยกเลิก</button>
-                    <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-emerald-600 text-white font-medium text-xs hover:bg-emerald-700 shadow-md flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูล
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-
-    <!-- MODAL 2: EDIT STUDENT INFO MODAL (Cols B, C, D, F) -->
-    <div id="edit-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity">
-        <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4 border border-slate-100">
-            <div class="flex items-center justify-between border-b pb-3">
-                <div class="flex items-center gap-2 text-amber-600">
-                    <i class="fa-solid fa-user-pen text-lg"></i>
-                    <h3 class="font-bold text-slate-800 text-base">แก้ไขข้อมูลนักศึกษา</h3>
-                </div>
-                <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-
-            <form id="edit-student-form" onsubmit="handleEditSubmit(event)" class="space-y-3 text-xs">
-                <input type="hidden" id="edit-student-id">
-                
-                <div class="bg-amber-50/70 p-2.5 rounded-xl border border-amber-200 text-amber-800 text-[11px] flex items-center gap-2">
-                    <i class="fa-solid fa-circle-exclamation text-amber-600 text-sm shrink-0"></i>
-                    <span>เมื่อแก้ไขข้อมูล ช่องที่มีการแก้ไขจะเปลี่ยนสีตัวอักษรเป็น<b>สีแดง</b>เพื่อระบุว่ามีการเปลี่ยนแปลง</span>
-                </div>
-
-                <!-- Readonly ID & No. -->
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-semibold text-slate-500 mb-1">รหัสนักศึกษา (Col A)</label>
-                        <input type="text" id="edit-id-display" disabled class="w-full p-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-500 cursor-not-allowed">
+                        <label class="block text-slate-600 font-medium mb-1">รหัสนักศึกษา (Col A)</label>
+                        <input type="text" id="displayEditId" disabled class="w-full bg-slate-100 border border-slate-200 rounded-lg p-2 text-slate-500 font-mono">
                     </div>
                     <div>
-                        <label class="block font-semibold text-slate-500 mb-1">เลขที่ (Col E)</label>
-                        <input type="text" id="edit-no-display" disabled class="w-full p-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-500 cursor-not-allowed">
+                        <label class="block text-slate-600 font-medium mb-1">เลขที่ (Col E)</label>
+                        <input type="text" id="displayEditNo" disabled class="w-full bg-slate-100 border border-slate-200 rounded-lg p-2 text-slate-500">
                     </div>
                 </div>
 
-                <!-- Editable Prefix (Col B) -->
                 <div>
-                    <label for="edit-prefix" class="block font-semibold text-slate-700 mb-1">คำนำหน้า (Col B)</label>
-                    <select id="edit-prefix" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <label class="block text-slate-600 font-medium mb-1">คำนำหน้า (Col B)</label>
+                    <select id="editPrefix" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-amber-500 focus:outline-none">
                         <option value="นาย">นาย</option>
                         <option value="นางสาว">นางสาว</option>
                         <option value="นาง">นาง</option>
-                        <option value="ด.ช.">ด.ช.</option>
-                        <option value="ด.ญ.">ด.ญ.</option>
+                        <option value="เด็กชาย">เด็กชาย</option>
+                        <option value="เด็กหญิง">เด็กหญิง</option>
                     </select>
                 </div>
 
-                <!-- Editable First Name (Col C) & Last Name (Col D) -->
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label for="edit-firstname" class="block font-semibold text-slate-700 mb-1">ชื่อ (Col C)</label>
-                        <input type="text" id="edit-firstname" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <label class="block text-slate-600 font-medium mb-1">ชื่อ (Col C)</label>
+                        <input type="text" id="editFirstName" required class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-amber-500 focus:outline-none">
                     </div>
                     <div>
-                        <label for="edit-lastname" class="block font-semibold text-slate-700 mb-1">นามสกุล (Col D)</label>
-                        <input type="text" id="edit-lastname" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <label class="block text-slate-600 font-medium mb-1">นามสกุล (Col D)</label>
+                        <input type="text" id="editLastName" required class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-amber-500 focus:outline-none">
                     </div>
                 </div>
 
-                <!-- Editable Class Level (Col F) -->
-                <div>
-                    <label for="edit-classlevel" class="block font-semibold text-slate-700 mb-1">ระดับชั้น (Col F)</label>
-                    <select id="edit-classlevel" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                        <option value="ปวช.1">ปวช.1</option>
-                        <option value="ปวช.2">ปวช.2</option>
-                        <option value="ปวช.3">ปวช.3</option>
-                        <option value="ปวส.1">ปวส.1</option>
-                        <option value="ปวส.2">ปวส.2</option>
-                    </select>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-600 font-medium mb-1">เบอร์โทรนักศึกษา (Col F)</label>
+                        <input type="tel" id="editPhone" placeholder="08X-XXX-XXXX" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-slate-600 font-medium mb-1">ระดับชั้น (Col G)</label>
+                        <select id="editClassLevel" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            <!-- Dynamic options + standard fallback -->
+                        </select>
+                    </div>
                 </div>
 
-                <div class="flex gap-2 pt-3">
-                    <button type="button" onclick="closeEditModal()" class="w-1/2 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium text-xs hover:bg-slate-50">ยกเลิก</button>
-                    <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-amber-600 text-white font-medium text-xs hover:bg-amber-700 shadow-md flex items-center justify-center gap-1.5">
+                <!-- Modal Footer Actions -->
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 border border-slate-300 rounded-xl text-slate-600 hover:bg-slate-50 font-medium">ยกเลิก</button>
+                    <button type="submit" id="saveInfoBtn" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium flex items-center gap-1.5 shadow-sm">
                         <i class="fa-solid fa-floppy-disk"></i> บันทึกการแก้ไข
                     </button>
                 </div>
@@ -480,690 +366,252 @@
         </div>
     </div>
 
-
-    <!-- MODAL 3: GOOGLE SHEETS API & APPS SCRIPT SETTINGS MODAL -->
-    <div id="config-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity">
-        <div class="bg-white rounded-2xl max-w-2xl w-full p-5 shadow-2xl space-y-4 border border-slate-100 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between border-b pb-3">
-                <div class="flex items-center gap-2 text-indigo-700">
-                    <i class="fa-solid fa-link text-lg"></i>
-                    <h3 class="font-bold text-slate-800 text-base">เชื่อมต่อ Google Sheets API</h3>
-                </div>
-                <button onclick="closeConfigModal()" class="text-slate-400 hover:text-slate-600 p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
+    <!-- MODAL 2: ATTENDANCE & NOTE RECORDING (Cols H, I) -->
+    <div id="attendanceModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden">
+            <div class="bg-emerald-700 text-white p-4 flex items-center justify-between">
+                <h3 class="font-bold text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-user-check"></i> เช็คชื่อเข้าร่วมกิจกรรม
+                </h3>
+                <button onclick="closeAttendanceModal()" class="text-emerald-200 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <!-- Tab Buttons -->
-            <div class="flex border-b border-slate-200">
-                <button id="tab-btn-link" onclick="switchConfigTab('link')" class="px-4 py-2 text-xs font-bold border-b-2 border-indigo-600 text-indigo-600">1. ตั้งค่า Web App URL</button>
-                <button id="tab-btn-script" onclick="switchConfigTab('script')" class="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 border-b-2 border-transparent">2. โค้ด Apps Script (สำหรับคัดลอก)</button>
-            </div>
+            <form id="attendanceForm" onsubmit="saveAttendance(event)" class="p-4 space-y-3.5 text-xs">
+                <input type="hidden" id="attStudentId">
 
-            <!-- Tab 1: Setup Web App URL -->
-            <div id="tab-content-link" class="space-y-3 text-xs">
-                <p class="text-slate-600">ใส่นาURL ของ Google Apps Script Web App ที่ติดตั้งลงใน Google Sheet ID: <code class="bg-slate-100 px-1 py-0.5 rounded text-indigo-700 font-mono">1JaRmJrsninnCj6DmlysrnXeSghOUjPgg3ZLN0znqULc</code></p>
-                
-                <div>
-                    <label for="web-app-url-input" class="block font-semibold text-slate-700 mb-1">Google Apps Script Web App URL</label>
-                    <input type="url" id="web-app-url-input" placeholder="https://script.google.com/macros/s/AKfycbzpTRzx66f3TIWtZ7tOtp52H6zbfKsIz1DZwcrTQrq2HIAOvCJoj_zQVlml3fbbmXk/exec" 
-                           class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-xs">
-                </div>
-
-                <div class="flex items-center justify-between bg-indigo-50 p-3 rounded-xl border border-indigo-100 text-indigo-900">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-circle-info text-indigo-600 text-base"></i>
-                        <span>หากยังไม่ได้ตั้งค่า Web App สามารถใช้งาน<b>โหมดข้อมูลจำลอง</b>ได้ทันที</span>
+                <!-- Target Student Card Summary -->
+                <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+                    <div class="font-bold text-emerald-900 text-sm" id="attStudentName">-</div>
+                    <div class="text-[11px] text-emerald-700 mt-0.5 flex gap-2">
+                        <span>รหัส: <strong id="attStudentCode">-</strong></span>
+                        <span>ระดับชั้น: <strong id="attStudentClass">-</strong></span>
                     </div>
-                    <button type="button" onclick="useDemoMode()" class="px-3 py-1 bg-white border border-indigo-200 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-medium shrink-0">
-                        ใช้ Demo Mode
+                </div>
+
+                <!-- Checkbox Choice -->
+                <div>
+                    <label class="block text-slate-600 font-medium mb-1">สถานะการเข้าร่วม (Col H)</label>
+                    <div class="flex items-center gap-3 p-2.5 border border-slate-200 rounded-xl bg-slate-50">
+                        <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
+                            <input type="radio" name="attendanceStatus" value="1" id="statusPresent" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500">
+                            <span class="text-emerald-700 font-bold"><i class="fa-solid fa-circle-check"></i> เข้าร่วมกิจกรรม</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
+                            <input type="radio" name="attendanceStatus" value="0" id="statusAbsent" class="w-4 h-4 text-slate-400 focus:ring-slate-400">
+                            <span class="text-slate-500"><i class="fa-solid fa-circle-xmark"></i> ยังไม่เข้าร่วม</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Note Input (Col I) -->
+                <div>
+                    <label class="block text-slate-600 font-medium mb-1">หมายเหตุ (Col I)</label>
+                    <textarea id="attNote" rows="2" placeholder="พิมพ์ข้อความหมายเหตุเพิ่มเติม..." class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-xs"></textarea>
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeAttendanceModal()" class="px-4 py-2 border border-slate-300 rounded-xl text-slate-600 hover:bg-slate-50 font-medium">ยกเลิก</button>
+                    <button type="submit" id="saveAttBtn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-check"></i> บันทึกข้อมูล
                     </button>
                 </div>
-
-                <div class="pt-2 flex justify-end gap-2">
-                    <button onclick="closeConfigModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50">ปิด</button>
-                    <button onclick="saveWebAppUrl()" class="px-4 py-2 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 shadow-md">บันทึกและเชื่อมต่อ</button>
-                </div>
-            </div>
-
-            <!-- Tab 2: Apps Script Code Generator -->
-            <div id="tab-content-script" class="hidden space-y-3 text-xs">
-                <p class="text-slate-600">คัดลอกโค้ดด้านล่างนี้ ไปวางใน Google Sheet -> <b>ส่วนขยาย (Extensions)</b> -> <b>Apps Script</b> แล้วกด <b>การทำให้ใช้งานได้ (Deploy) -> การทำให้ใช้งานได้ใหม่ (New deployment) -> เลือก Web App (ทุกคน/Anyone)</b></p>
-                
-                <div class="relative">
-                    <pre id="apps-script-code" class="bg-slate-900 text-slate-100 p-3 rounded-xl font-mono text-[11px] h-64 overflow-y-auto whitespace-pre-wrap select-all">
-// ==========================================
-// Google Apps Script backend for Attendance Web App
-// Sheet ID: 1JaRmJrsninnCj6DmlysrnXeSghOUjPgg3ZLN0znqULc
-// ==========================================
-
-function doGet(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var dataSheet = ss.getSheetByName("data");
-  var actSheet = ss.getSheetByName("act");
-  
-  // Read activity title from 'act' sheet A1:A2
-  var actTitle = "กิจกรรมเข้าร่วม";
-  var actSub = "";
-  if (actSheet) {
-    actTitle = actSheet.getRange("A1").getValue() || actTitle;
-    actSub = actSheet.getRange("A2").getValue() || "";
-  }
-  
-  // Read student data from 'data' sheet
-  var studentData = [];
-  if (dataSheet) {
-    var values = dataSheet.getDataRange().getValues();
-    // Header is row 0: รหัสนักศึกษา | คำนำหน้า | ชื่อ | นามสกุล | เลขที่ | ระดับชั้น | Check | หมายเหตุ
-    for (var i = 1; i < values.length; i++) {
-      var row = values[i];
-      if (row[0]) { // Check if student ID exists
-        studentData.push({
-          id: String(row[0]),
-          prefix: String(row[1] || ""),
-          firstName: String(row[2] || ""),
-          lastName: String(row[3] || ""),
-          no: String(row[4] || ""),
-          classLevel: String(row[5] || ""),
-          check: String(row[6] || ""),
-          remark: String(row[7] || ""),
-          rowIndex: i + 1
-        });
-      }
-    }
-  }
-  
-  var result = {
-    eventTitle: actTitle,
-    eventSub: actSub,
-    students: studentData
-  };
-  
-  return ContentService.createTextOutput(JSON.stringify(result))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function doPost(e) {
-  var lock = LockService.getScriptLock();
-  lock.tryLock(10000);
-  
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var dataSheet = ss.getSheetByName("data");
-    var params = JSON.parse(e.postData.contents);
-    var action = params.action;
-    
-    var values = dataSheet.getDataRange().getValues();
-    var targetRow = -1;
-    
-    // Find row by student ID (Col A)
-    for (var i = 1; i < values.length; i++) {
-      if (String(values[i][0]) === String(params.studentId)) {
-        targetRow = i + 1;
-        break;
-      }
-    }
-    
-    if (targetRow !== -1) {
-      if (action === "updateAttendance") {
-        // Col G = Check (7), Col H = Remark (8)
-        dataSheet.getRange(targetRow, 7).setValue(params.check);
-        dataSheet.getRange(targetRow, 8).setValue(params.remark);
-      } else if (action === "updateInfo") {
-        // Col B = Prefix (2), Col C = First (3), Col D = Last (4), Col F = Class (6)
-        dataSheet.getRange(targetRow, 2).setValue(params.prefix);
-        dataSheet.getRange(targetRow, 3).setValue(params.firstName);
-        dataSheet.getRange(targetRow, 4).setValue(params.lastName);
-        dataSheet.getRange(targetRow, 6).setValue(params.classLevel);
-      }
-      
-      return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Student not found" }))
-      .setMimeType(ContentService.MimeType.JSON);
-      
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
-  } finally {
-    lock.releaseLock();
-  }
-}
-</pre>
-                </div>
-
-                <div class="flex justify-between items-center pt-1">
-                    <span class="text-[11px] text-slate-500">กดปุ่มเพื่อคัดลอกโค้ดทั้งหมด</span>
-                    <button onclick="copyAppsScriptCode()" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-medium hover:bg-indigo-700 flex items-center gap-1.5">
-                        <i class="fa-regular fa-copy"></i> คัดลอกโค้ด Apps Script
-                    </button>
-                </div>
-            </div>
-
+            </form>
         </div>
     </div>
 
+    <!-- MODAL 3: GOOGLE APPS SCRIPT / API CONFIG MODAL -->
+    <div id="apiModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden">
+            <div class="bg-indigo-900 text-white p-4 flex items-center justify-between">
+                <h3 class="font-bold text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-plug text-amber-400"></i> ตั้งค่าเชื่อมต่อ Google Sheets Web App
+                </h3>
+                <button onclick="closeApiModal()" class="text-indigo-200 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
 
-    <!-- TOAST NOTIFICATION CONTAINER -->
-    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+            <div class="p-4 space-y-4 text-xs">
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">Google Apps Script Web App URL</label>
+                    <input type="url" id="apiUrlInput" placeholder="https://script.google.com/macros/s/.../exec" 
+                        class="w-full border border-slate-300 rounded-xl p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-[11px]">
+                    <p class="text-[11px] text-slate-500 mt-1">วาง Web App URL ที่สคริปต์ถูก Publish เป็น "Anyone" เรียบร้อยแล้ว</p>
+                </div>
 
+                <!-- Accordion for Code Instruction -->
+                <div class="border border-indigo-100 bg-indigo-50/50 rounded-xl p-3 space-y-2">
+                    <div class="font-bold text-indigo-900 flex items-center justify-between">
+                        <span><i class="fa-solid fa-code text-indigo-600"></i> โค้ดสำหรับวางใน Google Apps Script (Code.gs)</span>
+                        <button onclick="copyAppsScriptCode()" class="text-[10px] bg-indigo-600 text-white px-2 py-1 rounded hover:bg-indigo-700">
+                            <i class="fa-regular fa-copy"></i> คัดลอกโค้ด
+                        </button>
+                    </div>
+                    <pre class="bg-slate-900 text-emerald-400 p-2.5 rounded-lg text-[10px] overflow-x-auto max-h-40 font-mono leading-relaxed" id="appsScriptCodeSnippet">
+// Google Apps Script backend for Spreadsheet ID: 1JaRmJrsninnCj6DmlysrnXeSghOUjPgg3ZLN0znqULc
+const SPREADSHEET_ID = "1JaRmJrsninnCj6DmlysrnXeSghOUjPgg3ZLN0znqULc";
+
+function doGet(e) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    let eventName = "กิจกรรมเช็คชื่อเข้าร่วม";
+    const actSheet = ss.getSheetByName("act");
+    if (actSheet) {
+      const actData = actSheet.getRange("A1:A2").getValues();
+      if (actData[0] && actData[0][0]) eventName = actData[0][0];
+      if (actData[1] && actData[1][0]) eventName += " (" + actData[1][0] + ")";
+    }
+
+    const dataSheet = ss.getSheetByName("data");
+    if (!dataSheet) return createJsonResponse({ status: "error", message: "ไม่พบ Sheet ชื่อ 'data'" });
+
+    const rows = dataSheet.getDataRange().getValues();
+    const students = [];
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row[0]) continue;
+      const checkVal = String(row[7] || "").toLowerCase().trim(); // Col H
+      students.push({
+        rowIndex: i + 1,
+        studentId: String(row[0] || ""),     // Col A
+        prefix: String(row[1] || ""),        // Col B
+        firstName: String(row[2] || ""),     // Col C
+        lastName: String(row[3] || ""),      // Col D
+        no: String(row[4] || ""),            // Col E
+        phone: String(row[5] || ""),         // Col F (เบอร์โทรนักศึกษา)
+        classLevel: String(row[6] || "ไม่ระบุ"), // Col G (ระดับชั้น)
+        check: checkVal === "true" || checkVal === "checked" || checkVal === "1" || checkVal === "เข้าร่วม", // Col H
+        note: String(row[8] || ""),          // Col I (หมายเหตุ)
+        editedFields: []
+      });
+    }
+    return createJsonResponse({ status: "success", eventName: eventName, data: students });
+  } catch (err) {
+    return createJsonResponse({ status: "error", message: err.toString() });
+  }
+}
+
+function doPost(e) {
+  try {
+    const contents = JSON.parse(e.postData.contents);
+    const action = contents.action;
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const dataSheet = ss.getSheetByName("data");
+
+    if (action === "checkAttendance") {
+      const rowIdx = findRowByStudentId(dataSheet, String(contents.studentId));
+      if (rowIdx !== -1) {
+        dataSheet.getRange(rowIdx, 8).setValue(contents.check ? "เข้าร่วม" : ""); // Col H
+        dataSheet.getRange(rowIdx, 9).setValue(contents.note || ""); // Col I
+        return createJsonResponse({ status: "success" });
+      }
+    } else if (action === "updateStudentInfo") {
+      const rowIdx = findRowByStudentId(dataSheet, String(contents.studentId));
+      if (rowIdx !== -1) {
+        dataSheet.getRange(rowIdx, 2).setValue(contents.prefix);    // Col B
+        dataSheet.getRange(rowIdx, 3).setValue(contents.firstName); // Col C
+        dataSheet.getRange(rowIdx, 4).setValue(contents.lastName);  // Col D
+        dataSheet.getRange(rowIdx, 6).setValue(contents.phone);     // Col F
+        dataSheet.getRange(rowIdx, 7).setValue(contents.classLevel);// Col G
+        return createJsonResponse({ status: "success" });
+      }
+    }
+    return createJsonResponse({ status: "error", message: "Invalid action" });
+  } catch (err) {
+    return createJsonResponse({ status: "error", message: err.toString() });
+  }
+}
+
+function findRowByStudentId(sheet, studentId) {
+  const data = sheet.getRange("A:A").getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === studentId) return i + 1;
+  }
+  return -1;
+}
+
+function createJsonResponse(data) {
+  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
+}</pre>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end gap-2">
+                    <button onclick="closeApiModal()" class="px-4 py-2 border border-slate-300 rounded-xl text-slate-600 hover:bg-slate-50 font-medium">ปิด</button>
+                    <button onclick="saveApiUrl()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium shadow-sm">
+                        <i class="fa-solid fa-save"></i> บันทึก URL
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- MAIN JAVASCRIPT LOGIC -->
     <script>
-        // =========================================================================
-        // INITIAL MOCK DATA (Fallback engine if live endpoint is not set)
-        // Represents Google Sheets "data" sheet and "act" sheet structure
-        // =========================================================================
-        const INITIAL_MOCK_DATA = {
-            eventTitle: "โครงการปฐมนิเทศและสัมมนาผู้เรียน ประจำปีการศึกษา 2567",
-            eventSub: "ณ หอประชุมใหญ่ วิทยาลัยการอาชีพ | เวลา 08:30 - 16:30 น.",
-            students: [
-                { id: "662010001", prefix: "นาย", firstName: "กิตติพงษ์", lastName: "วงษ์สว่าง", no: "1", classLevel: "ปวช.1", check: "เข้าร่วม", remark: "ตรงเวลา", editedFields: [] },
-                { id: "662010002", prefix: "นางสาว", firstName: "จิราพร", lastName: "ใจดี", no: "2", classLevel: "ปวช.1", check: "เข้าร่วม", remark: "ตัวแทนห้อง", editedFields: [] },
-                { id: "662010003", prefix: "นาย", firstName: "ณัฐวุฒิ", lastName: "สุขเสริฐ", no: "3", classLevel: "ปวช.1", check: "ยังไม่เข้าร่วม", remark: "", editedFields: [] },
-                { id: "662010004", prefix: "นางสาว", firstName: "ธนพร", lastName: "แสงทอง", no: "4", classLevel: "ปวช.1", check: "เข้าร่วม", remark: "", editedFields: [] },
-                { id: "662010005", prefix: "นาย", firstName: "ปณิธาน", lastName: "คงเจริญ", no: "5", classLevel: "ปวช.1", check: "ยังไม่เข้าร่วม", remark: "", editedFields: [] },
-                
-                { id: "652010001", prefix: "นาย", firstName: "พงศธร", lastName: "บุญมี", no: "1", classLevel: "ปวช.2", check: "เข้าร่วม", remark: "ช่วยงานสตาฟ", editedFields: [] },
-                { id: "652010002", prefix: "นางสาว", firstName: "ภัทรวดี", lastName: "รัตนกุล", no: "2", classLevel: "ปวช.2", check: "ยังไม่เข้าร่วม", remark: "", editedFields: [] },
-                { id: "652010003", prefix: "นาย", firstName: "วรเมธ", lastName: "เจริญสุข", no: "3", classLevel: "ปวช.2", check: "เข้าร่วม", remark: "", editedFields: [] },
-                
-                { id: "642010001", prefix: "นาย", firstName: "ศุภกิตติ์", lastName: "อารีย์", no: "1", classLevel: "ปวช.3", check: "เข้าร่วม", remark: "", editedFields: [] },
-                { id: "642010002", prefix: "นางสาว", firstName: "สิริกร", lastName: "สมบูรณ์", no: "2", classLevel: "ปวช.3", check: "ยังไม่เข้าร่วม", remark: "ลากิจ", editedFields: [] },
-                
-                { id: "663010001", prefix: "นาย", firstName: "อภิสิทธิ์", lastName: "ชูชาติ", no: "1", classLevel: "ปวส.1", check: "เข้าร่วม", remark: "ประธานชมรม", editedFields: [] },
-                { id: "663010002", prefix: "นางสาว", firstName: "อารียา", lastName: "มั่นคง", no: "2", classLevel: "ปวส.1", check: "ยังไม่เข้าร่วม", remark: "", editedFields: [] },
-                
-                { id: "653010001", prefix: "นาย", firstName: "กฤษดา", lastName: "ยอดแก้ว", no: "1", classLevel: "ปวส.2", check: "เข้าร่วม", remark: "", editedFields: [] },
-                { id: "653010002", prefix: "นางสาว", firstName: "ชลธิชา", lastName: "มีสุข", no: "2", classLevel: "ปวส.2", check: "เข้าร่วม", remark: "", editedFields: [] }
-            ]
-        };
+        // Global App State
+        let apiWebUrl = localStorage.getItem('gas_app_url') || '';
+        let allStudents = [];
+        let filteredStudents = [];
+        let eventTitle = 'กิจกรรมเช็คชื่อการเข้าร่วม';
+        let currentClassFilter = 'ALL';
+        let currentStatusFilter = 'ALL';
+        let searchQuery = '';
+        let attendanceChart = null;
 
-        // State Management
-        let appState = {
-            students: [],
-            eventTitle: "",
-            eventSub: "",
-            selectedClass: "ALL", // "ALL" or "ปวช.1", "ปวช.2", etc.
-            statusFilter: "ALL",  // "ALL", "ATTENDED", "PENDING"
-            searchQuery: "",
-            webAppUrl: localStorage.getItem("sheet_web_app_url") || "",
-            isLiveMode: false,
-            attendanceChart: null
-        };
+        // Demo Mock Data Generator (Used if Google Sheet Web App URL is not provided yet)
+        const sampleClasses = ['ปวช.1/18ก69', 'ปวช.2/18ก69', 'ปวส.1/18ก69', 'ปวส.2/18ก69'];
+        const samplePrefixes = ['นาย', 'นางสาว'];
+        const sampleFirstNames = ['ฐนวรรณ', 'จิราวดี', 'ภัทราพร', 'อาทิตยา', 'ชาญณรงค์', 'กานต์ธิดา', 'สมฤดี', 'จุฬาลักษณ์', 'กิตติศักดิ์', 'นพรัตน์', 'ศุภโชค', 'วรรณิสา'];
+        const sampleLastNames = ['หัตถา', 'สุภาวะ', 'คุณทน', 'เสลจุล', 'ไพโรจน์', 'อันชื่น', 'เยาวบุตร', 'ติละบาล', 'สุขเจริญ', 'มั่นคง', 'รัตนโกสินทร์', 'บุญมี'];
 
-        // Initialize App
-        window.addEventListener("DOMContentLoaded", () => {
-            loadInitialData();
+        function generateMockStudents() {
+            const list = [];
+            let count = 1;
+            sampleClasses.forEach((cls, clsIdx) => {
+                for (let i = 1; i <= 8; i++) {
+                    const stId = (39200 + count).toString();
+                    const isChecked = count % 3 === 0;
+                    list.push({
+                        rowIndex: count + 1,
+                        studentId: stId,                                                 // Col A
+                        prefix: samplePrefixes[count % samplePrefixes.length],            // Col B
+                        firstName: sampleFirstNames[count % sampleFirstNames.length],     // Col C
+                        lastName: sampleLastNames[count % sampleLastNames.length],        // Col D
+                        no: i.toString(),                                                // Col E
+                        phone: `08${Math.floor(10000000 + Math.random() * 90000000)}`,    // Col F
+                        classLevel: cls,                                                 // Col G
+                        check: isChecked,                                                // Col H
+                        note: isChecked ? 'มาตรงเวลา' : '',                               // Col I
+                        editedFields: [] // Stores edited fields like ['prefix', 'firstName', 'lastName', 'phone', 'classLevel']
+                    });
+                    count++;
+                }
+            });
+            return list;
+        }
+
+        // Initialize Web App
+        document.addEventListener('DOMContentLoaded', () => {
             initChart();
+            if (apiWebUrl) {
+                document.getElementById('demoNoticeBar').classList.add('hidden');
+                fetchData();
+            } else {
+                document.getElementById('demoNoticeBar').classList.remove('hidden');
+                allStudents = generateMockStudents();
+                eventTitle = 'กิจกรรมปฐมนิเทศนักศึกษาใหม่ (ข้อมูลสาธิต)';
+                renderApp();
+            }
         });
 
-        // Load Data Engine (Checks LocalStorage or Live GAS Endpoint)
-        async function loadInitialData() {
-            const savedUrl = localStorage.getItem("sheet_web_app_url");
-            if (savedUrl) {
-                appState.webAppUrl = savedUrl;
-                appState.isLiveMode = true;
-                updateConnectionStatus(true);
-                await fetchLiveData();
-            } else {
-                // Load from LocalStorage mock cache or fallback
-                const cached = localStorage.getItem("attendance_mock_data");
-                if (cached) {
-                    const parsed = JSON.parse(cached);
-                    appState.students = parsed.students || INITIAL_MOCK_DATA.students;
-                    appState.eventTitle = parsed.eventTitle || INITIAL_MOCK_DATA.eventTitle;
-                    appState.eventSub = parsed.eventSub || INITIAL_MOCK_DATA.eventSub;
-                } else {
-                    appState.students = [...INITIAL_MOCK_DATA.students];
-                    appState.eventTitle = INITIAL_MOCK_DATA.eventTitle;
-                    appState.eventSub = INITIAL_MOCK_DATA.eventSub;
-                    saveMockDataToStorage();
-                }
-                appState.isLiveMode = false;
-                updateConnectionStatus(false);
-                renderAll();
-            }
-        }
-
-        function saveMockDataToStorage() {
-            localStorage.setItem("attendance_mock_data", JSON.stringify({
-                eventTitle: appState.eventTitle,
-                eventSub: appState.eventSub,
-                students: appState.students
-            }));
-        }
-
-        // Fetch Live Data from Google Apps Script Web App
-        async function fetchLiveData() {
-            if (!appState.webAppUrl) return;
-            
-            const refreshIcon = document.getElementById("refresh-icon");
-            if (refreshIcon) refreshIcon.classList.add("fa-spin");
-
-            try {
-                const response = await fetch(appState.webAppUrl);
-                if (!response.ok) throw new Error("Network response was not ok");
-                const data = await response.json();
-
-                if (data && data.students) {
-                    // Preserve local tracked edit indicators if present
-                    const existingEdits = {};
-                    appState.students.forEach(s => {
-                        if (s.editedFields && s.editedFields.length > 0) {
-                            existingEdits[s.id] = s.editedFields;
-                        }
-                    });
-
-                    appState.students = data.students.map(s => ({
-                        ...s,
-                        editedFields: existingEdits[s.id] || []
-                    }));
-                    if (data.eventTitle) appState.eventTitle = data.eventTitle;
-                    if (data.eventSub) appState.eventSub = data.eventSub;
-
-                    renderAll();
-                    showToast("อัปเดตข้อมูลจาก Google Sheet เรียบร้อย", "success");
-                }
-            } catch (error) {
-                console.error("Live Fetch Error:", error);
-                showToast("ไม่สามารถโหลดข้อมูลจาก Google Sheet ได้ กำลังสลับใช้ Demo Mode", "error");
-                appState.isLiveMode = false;
-                updateConnectionStatus(false);
-            } finally {
-                if (refreshIcon) refreshIcon.classList.remove("fa-spin");
-            }
-        }
-
-        function updateConnectionStatus(isLive) {
-            const dot = document.getElementById("connection-status-dot");
-            const text = document.getElementById("connection-status-text");
-            if (isLive) {
-                dot.className = "w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse";
-                text.textContent = "เชื่อมต่อ Google Sheet Live";
-            } else {
-                dot.className = "w-2 h-2 rounded-full bg-amber-400 inline-block";
-                text.textContent = "โหมดข้อมูลจำลอง (Demo Mode)";
-            }
-        }
-
-        function refreshData() {
-            if (appState.isLiveMode) {
-                fetchLiveData();
-            } else {
-                const refreshIcon = document.getElementById("refresh-icon");
-                refreshIcon.classList.add("fa-spin");
-                setTimeout(() => {
-                    refreshIcon.classList.remove("fa-spin");
-                    renderAll();
-                    showToast("รีเฟรชข้อมูลเรียบร้อย", "info");
-                }, 400);
-            }
-        }
-
-        // =========================================================================
-        // RENDERING PIPELINE & UI UPDATES
-        // =========================================================================
-        function renderAll() {
-            renderBannerTitle();
-            renderClassFilters();
-            renderDashboardStats();
-            renderStudentList();
-            updateChart();
-        }
-
-        function renderBannerTitle() {
-            document.getElementById("event-title").textContent = appState.eventTitle || "ระบบเช็คชื่อเข้าร่วมกิจกรรม";
-            document.getElementById("event-subtitle").textContent = appState.eventSub || "ข้อมูลจาก Google Sheet name: act";
-        }
-
-        // Generate Class Filter Buttons Dynamically
-        function renderClassFilters() {
-            const container = document.getElementById("class-filter-container");
-            
-            // Extract unique class levels from current student dataset
-            const classLevels = Array.from(new Set(appState.students.map(s => s.classLevel))).filter(Boolean).sort();
-            
-            let html = `
-                <button onclick="selectClass('ALL')" 
-                    class="px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shadow-sm ${
-                        appState.selectedClass === 'ALL'
-                            ? 'bg-indigo-600 text-white shadow-indigo-200'
-                            : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-                    }">
-                    <i class="fa-solid fa-list-ul mr-1.5"></i>ระดับชั้นทั้งหมด
-                </button>
-            `;
-
-            classLevels.forEach(cls => {
-                const isSelected = appState.selectedClass === cls;
-                const count = appState.students.filter(s => s.classLevel === cls).length;
-                
-                html += `
-                    <button onclick="selectClass('${cls}')" 
-                        class="px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shadow-sm flex items-center gap-1.5 ${
-                            isSelected
-                                ? 'bg-indigo-600 text-white shadow-indigo-200 ring-2 ring-indigo-300'
-                                : 'bg-white text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 border border-slate-200'
-                        }">
-                        <span>${cls}</span>
-                        <span class="px-1.5 py-0.2 rounded-full text-[10px] ${
-                            isSelected ? 'bg-indigo-500 text-white' : 'bg-slate-100 text-slate-500'
-                        }">${count}</span>
-                    </button>
-                `;
-            });
-
-            container.innerHTML = html;
-        }
-
-        function selectClass(cls) {
-            appState.selectedClass = cls;
-            renderClassFilters();
-            renderDashboardStats();
-            renderStudentList();
-            updateChart();
-        }
-
-        // Render Overview Stats & Class Level Summary
-        function renderDashboardStats() {
-            // Filter list based on selected class
-            const filteredByClass = appState.selectedClass === "ALL" 
-                ? appState.students 
-                : appState.students.filter(s => s.classLevel === appState.selectedClass);
-
-            const total = filteredByClass.length;
-            const attended = filteredByClass.filter(s => s.check === "เข้าร่วม").length;
-            const pending = total - attended;
-            const percentage = total > 0 ? Math.round((attended / total) * 100) : 0;
-
-            // Stats Cards updates
-            document.getElementById("stat-total-count").textContent = total;
-            document.getElementById("stat-attended-count").textContent = attended;
-            document.getElementById("stat-attended-percent").textContent = `(${percentage}%)`;
-            document.getElementById("stat-pending-count").textContent = `ยังไม่เข้าร่วม ${pending} คน`;
-            document.getElementById("active-filter-badge").textContent = appState.selectedClass === "ALL" ? "แสดงทุกระดับชั้น" : `เฉพาะ ${appState.selectedClass}`;
-
-            // Render breakdown by class lists inside top cards
-            renderClassBreakdowns();
-
-            // Render summary banner if a class is selected
-            const banner = document.getElementById("class-summary-banner");
-            if (appState.selectedClass !== "ALL") {
-                banner.classList.remove("hidden");
-                document.getElementById("class-banner-title").textContent = `สรุปข้อมูลระดับชั้น: ${appState.selectedClass}`;
-                document.getElementById("class-banner-total").textContent = `${total} คน`;
-                document.getElementById("class-banner-attended").textContent = `${attended} คน`;
-                document.getElementById("class-banner-pending").textContent = `${pending} คน`;
-            } else {
-                banner.classList.add("hidden");
-            }
-        }
-
-        function renderClassBreakdowns() {
-            const classLevels = Array.from(new Set(appState.students.map(s => s.classLevel))).filter(Boolean).sort();
-            
-            const totalContainer = document.getElementById("breakdown-total-class");
-            const attendedContainer = document.getElementById("breakdown-attended-class");
-
-            let totalHtml = "";
-            let attendedHtml = "";
-
-            classLevels.forEach(cls => {
-                const clsStudents = appState.students.filter(s => s.classLevel === cls);
-                const clsTotal = clsStudents.length;
-                const clsAttended = clsStudents.filter(s => s.check === "เข้าร่วม").length;
-
-                totalHtml += `
-                    <div class="flex justify-between items-center bg-slate-50/80 px-2 py-1 rounded border border-slate-100">
-                        <span class="text-slate-600 font-medium">${cls}:</span>
-                        <span class="font-bold text-slate-800">${clsTotal} คน</span>
-                    </div>
-                `;
-
-                attendedHtml += `
-                    <div class="flex justify-between items-center bg-emerald-50/60 px-2 py-1 rounded border border-emerald-100/60">
-                        <span class="text-slate-600 font-medium">${cls}:</span>
-                        <span class="font-bold text-emerald-700">${clsAttended} คน</span>
-                    </div>
-                `;
-            });
-
-            totalContainer.innerHTML = totalHtml || '<span class="text-slate-400">ไม่มีข้อมูล</span>';
-            attendedContainer.innerHTML = attendedHtml || '<span class="text-slate-400">ไม่มีข้อมูล</span>';
-        }
-
-        // Main Student List Render (Table & Mobile Cards)
-        function renderStudentList() {
-            const tableBody = document.getElementById("student-table-body");
-            const cardsContainer = document.getElementById("student-mobile-cards");
-            const emptyState = document.getElementById("empty-state");
-
-            // Filtering pipeline
-            let filtered = appState.students;
-
-            // 1. Class filter
-            if (appState.selectedClass !== "ALL") {
-                filtered = filtered.filter(s => s.classLevel === appState.selectedClass);
-            }
-
-            // 2. Status filter
-            if (appState.statusFilter === "ATTENDED") {
-                filtered = filtered.filter(s => s.check === "เข้าร่วม");
-            } else if (appState.statusFilter === "PENDING") {
-                filtered = filtered.filter(s => s.check !== "เข้าร่วม");
-            }
-
-            // 3. Search query
-            if (appState.searchQuery.trim() !== "") {
-                const q = appState.searchQuery.toLowerCase().trim();
-                filtered = filtered.filter(s => 
-                    s.id.toLowerCase().includes(q) ||
-                    s.firstName.toLowerCase().includes(q) ||
-                    s.lastName.toLowerCase().includes(q) ||
-                    s.no.toLowerCase().includes(q) ||
-                    (s.prefix && s.prefix.toLowerCase().includes(q)) ||
-                    (s.remark && s.remark.toLowerCase().includes(q))
-                );
-            }
-
-            // Update Counts Indicator
-            document.getElementById("search-result-count").textContent = `แสดงข้อมูล ${filtered.length} รายการ`;
-            updateFilterPillCounts();
-
-            if (filtered.length === 0) {
-                tableBody.innerHTML = "";
-                cardsContainer.innerHTML = "";
-                emptyState.classList.remove("hidden");
-                return;
-            }
-
-            emptyState.classList.add("hidden");
-
-            // Sort by class and number
-            filtered.sort((a, b) => {
-                if (a.classLevel === b.classLevel) {
-                    return parseInt(a.no) - parseInt(b.no);
-                }
-                return a.classLevel.localeCompare(b.classLevel);
-            });
-
-            // Build Table Rows (Desktop)
-            let tableHtml = "";
-            let cardsHtml = "";
-
-            filtered.forEach(student => {
-                const edited = student.editedFields || [];
-                const isPrefixEdited = edited.includes("prefix");
-                const isFirstEdited = edited.includes("firstName");
-                const isLastEdited = edited.includes("lastName");
-                const isClassEdited = edited.includes("classLevel");
-
-                const isAttended = student.check === "เข้าร่วม";
-
-                // Table Row HTML
-                tableHtml += `
-                    <tr class="hover:bg-slate-50/80 transition-colors">
-                        <td class="p-3 text-center font-medium text-slate-500">${student.no || '-'}</td>
-                        <td class="p-3 font-mono font-semibold text-slate-800">${student.id}</td>
-                        <td class="p-3 ${isPrefixEdited ? 'text-edited' : 'text-slate-600'}">${student.prefix || ''}</td>
-                        <td class="p-3 ${isFirstEdited ? 'text-edited' : 'text-slate-800 font-medium'}">${student.firstName}</td>
-                        <td class="p-3 ${isLastEdited ? 'text-edited' : 'text-slate-800 font-medium'}">${student.lastName}</td>
-                        <td class="p-3 text-center">
-                            <span class="inline-block px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700 ${isClassEdited ? 'text-edited' : ''}">
-                                ${student.classLevel}
-                            </span>
-                        </td>
-                        <td class="p-3 text-center">
-                            ${isAttended 
-                                ? '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800"><i class="fa-solid fa-circle-check text-emerald-600"></i> เข้าร่วม</span>' 
-                                : '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800"><i class="fa-regular fa-clock text-amber-600"></i> ยังไม่เข้าร่วม</span>'
-                            }
-                        </td>
-                        <td class="p-3 text-slate-500 italic max-w-[150px] truncate" title="${student.remark || ''}">
-                            ${student.remark ? student.remark : '-'}
-                        </td>
-                        <td class="p-3 text-center">
-                            <div class="flex items-center justify-center gap-1.5">
-                                <button onclick="openAttendanceModal('${student.id}')" 
-                                    class="px-2.5 py-1 rounded-lg text-xs font-semibold ${isAttended ? 'bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700' : 'bg-emerald-600 text-white hover:bg-emerald-700'} transition shadow-sm">
-                                    <i class="fa-solid fa-check text-[10px] mr-1"></i>${isAttended ? 'แก้หมายเหตุ' : 'เข้าร่วม'}
-                                </button>
-                                <button onclick="openEditModal('${student.id}')" 
-                                    class="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition" title="แก้ไขข้อมูล">
-                                    <i class="fa-solid fa-pen-to-square text-sm"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-
-                // Mobile Card HTML
-                cardsHtml += `
-                    <div class="glass-card rounded-2xl p-4 shadow-sm border border-slate-200/80 space-y-3">
-                        <div class="flex items-start justify-between">
-                            <div class="flex items-center gap-2">
-                                <span class="w-6 h-6 rounded-full bg-slate-100 text-slate-600 font-bold text-xs flex items-center justify-center shrink-0">
-                                    ${student.no || '#'}
-                                </span>
-                                <div>
-                                    <h4 class="font-bold text-slate-800 text-sm leading-tight">
-                                        <span class="${isPrefixEdited ? 'text-edited' : ''}">${student.prefix}</span>
-                                        <span class="${isFirstEdited ? 'text-edited' : ''}">${student.firstName}</span>
-                                        <span class="${isLastEdited ? 'text-edited' : ''}">${student.lastName}</span>
-                                    </h4>
-                                    <p class="text-xs text-slate-500 font-mono mt-0.5">รหัส: ${student.id}</p>
-                                </div>
-                            </div>
-                            <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700 ${isClassEdited ? 'text-edited' : ''}">
-                                ${student.classLevel}
-                            </span>
-                        </div>
-
-                        <div class="flex items-center justify-between text-xs pt-2 border-t border-slate-100">
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-slate-400">สถานะ:</span>
-                                ${isAttended 
-                                    ? '<span class="font-bold text-emerald-600 flex items-center gap-1"><i class="fa-solid fa-circle-check text-emerald-500"></i> เข้าร่วมแล้ว</span>' 
-                                    : '<span class="font-bold text-amber-600 flex items-center gap-1"><i class="fa-regular fa-clock text-amber-500"></i> ยังไม่เข้าร่วม</span>'
-                                }
-                            </div>
-                            ${student.remark ? `<span class="text-slate-500 italic bg-slate-50 px-2 py-0.5 rounded max-w-[140px] truncate" title="${student.remark}">💬 ${student.remark}</span>` : ''}
-                        </div>
-
-                        <div class="flex items-center gap-2 pt-1">
-                            <button onclick="openAttendanceModal('${student.id}')" 
-                                class="flex-1 py-2 rounded-xl text-xs font-semibold ${isAttended ? 'bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 border border-slate-200' : 'bg-emerald-600 text-white hover:bg-emerald-700'} transition shadow-sm flex items-center justify-center gap-1.5">
-                                <i class="fa-solid fa-user-check"></i>
-                                ${isAttended ? 'แก้ไขหมายเหตุ' : 'บันทึกเข้าร่วม'}
-                            </button>
-                            <button onclick="openEditModal('${student.id}')" 
-                                class="px-3 py-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-amber-50 hover:text-amber-600 border border-slate-200 transition text-xs font-semibold flex items-center gap-1">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                                <span>แก้ไข</span>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-
-            tableBody.innerHTML = tableHtml;
-            cardsContainer.innerHTML = cardsHtml;
-        }
-
-        function updateFilterPillCounts() {
-            const list = appState.selectedClass === "ALL" 
-                ? appState.students 
-                : appState.students.filter(s => s.classLevel === appState.selectedClass);
-
-            const allCount = list.length;
-            const attendedCount = list.filter(s => s.check === "เข้าร่วม").length;
-            const pendingCount = allCount - attendedCount;
-
-            document.getElementById("cnt-status-all").textContent = allCount;
-            document.getElementById("cnt-status-attended").textContent = attendedCount;
-            document.getElementById("cnt-status-pending").textContent = pendingCount;
-        }
-
-        // Status Filter Action
-        function setStatusFilter(status) {
-            appState.statusFilter = status;
-            
-            // Toggle active pill UI
-            const btnAll = document.getElementById("filter-status-all");
-            const btnAtt = document.getElementById("filter-status-attended");
-            const btnPen = document.getElementById("filter-status-pending");
-
-            btnAll.className = "px-3 py-1.5 rounded-xl text-xs font-medium transition " + (status === 'ALL' ? "bg-slate-800 text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200");
-            btnAtt.className = "px-3 py-1.5 rounded-xl text-xs font-medium transition " + (status === 'ATTENDED' ? "bg-emerald-600 text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700");
-            btnPen.className = "px-3 py-1.5 rounded-xl text-xs font-medium transition " + (status === 'PENDING' ? "bg-amber-600 text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-amber-50 hover:text-amber-700");
-
-            renderStudentList();
-        }
-
-        function filterStudents() {
-            const input = document.getElementById("search-input");
-            const clearBtn = document.getElementById("clear-search");
-            appState.searchQuery = input.value;
-
-            if (input.value.length > 0) {
-                clearBtn.classList.remove("hidden");
-            } else {
-                clearBtn.classList.add("hidden");
-            }
-
-            renderStudentList();
-        }
-
-        function clearSearch() {
-            document.getElementById("search-input").value = "";
-            appState.searchQuery = "";
-            document.getElementById("clear-search").classList.add("hidden");
-            renderStudentList();
-        }
-
-        function resetFilters() {
-            appState.selectedClass = "ALL";
-            appState.statusFilter = "ALL";
-            appState.searchQuery = "";
-            document.getElementById("search-input").value = "";
-            document.getElementById("clear-search").classList.add("hidden");
-            setStatusFilter("ALL");
-            renderAll();
-        }
-
-        // Chart.js Visual Rendering
+        // Chart Initialization
         function initChart() {
             const ctx = document.getElementById('attendanceChart').getContext('2d');
-            appState.attendanceChart = new Chart(ctx, {
+            attendanceChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: ['เข้าร่วมแล้ว', 'ยังไม่เข้าร่วม'],
                     datasets: [{
                         data: [0, 0],
-                        backgroundColor: ['#10b981', '#f59e0b'],
+                        backgroundColor: ['#22c55e', '#e2e8f0'],
+                        hoverBackgroundColor: ['#16a34a', '#cbd5e1'],
                         borderWidth: 2,
                         borderColor: '#ffffff'
                     }]
@@ -1176,8 +624,7 @@ function doPost(e) {
                             position: 'bottom',
                             labels: {
                                 font: { family: 'Kanit', size: 11 },
-                                boxWidth: 12,
-                                padding: 10
+                                boxWidth: 12
                             }
                         }
                     },
@@ -1186,281 +633,555 @@ function doPost(e) {
             });
         }
 
-        function updateChart() {
-            if (!appState.attendanceChart) return;
-
-            const list = appState.selectedClass === "ALL" 
-                ? appState.students 
-                : appState.students.filter(s => s.classLevel === appState.selectedClass);
-
-            const attended = list.filter(s => s.check === "เข้าร่วม").length;
-            const pending = list.length - attended;
-
-            appState.attendanceChart.data.datasets[0].data = [attended, pending];
-            appState.attendanceChart.update();
+        function updateChart(attended, total) {
+            if (!attendanceChart) return;
+            const notAttended = Math.max(0, total - attended);
+            attendanceChart.data.datasets[0].data = [attended, notAttended];
+            attendanceChart.update();
         }
 
+        // Fetch Data from Backend
+        async function fetchData(showToast = false) {
+            const spinner = document.getElementById('refreshSpinner');
+            spinner.classList.add('fa-spin');
 
-        // =========================================================================
-        // ACTION MODAL HANDLERS (Attendance Check & Student Data Edit)
-        // =========================================================================
+            if (!apiWebUrl) {
+                setTimeout(() => {
+                    spinner.classList.remove('fa-spin');
+                    if (showToast) showNotification('อัปเดตข้อมูลสาธิตเรียบร้อย', 'info');
+                }, 500);
+                return;
+            }
 
-        // 1. Attendance Check Modal
-        function openAttendanceModal(studentId) {
-            const student = appState.students.find(s => s.id === studentId);
-            if (!student) return;
+            try {
+                const response = await fetch(apiWebUrl);
+                const result = await response.json();
 
-            document.getElementById("att-student-id").value = student.id;
-            document.getElementById("att-remark").value = student.remark || "";
+                if (result.status === 'success') {
+                    if (result.eventName) eventTitle = result.eventName;
+                    // Merge local edited state flag if present
+                    const prevEdits = {};
+                    allStudents.forEach(s => {
+                        if (s.editedFields && s.editedFields.length > 0) {
+                            prevEdits[s.studentId] = s.editedFields;
+                        }
+                    });
 
-            // Populate Student Info Block
-            const infoContainer = document.getElementById("attendance-modal-student-info");
-            infoContainer.innerHTML = `
-                <div class="flex justify-between items-center font-bold text-slate-800 text-sm">
-                    <span>${student.prefix}${student.firstName} ${student.lastName}</span>
-                    <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 text-xs">${student.classLevel}</span>
-                </div>
-                <div class="flex justify-between text-slate-500">
-                    <span>รหัสนักศึกษา: ${student.id}</span>
-                    <span>เลขที่: ${student.no}</span>
-                </div>
+                    allStudents = result.data.map(item => ({
+                        ...item,
+                        editedFields: prevEdits[item.studentId] || item.editedFields || []
+                    }));
+
+                    renderApp();
+                    if (showToast) showNotification('ดึงข้อมูลล่าสุดเรียบร้อยแล้ว', 'success');
+                } else {
+                    showNotification('เกิดข้อผิดพลาด: ' + result.message, 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showNotification('ไม่สามารถเชื่อมต่อกับ Google Apps Script URL ได้', 'error');
+            } finally {
+                spinner.classList.remove('fa-spin');
+            }
+        }
+
+        // Core Render Function
+        function renderApp() {
+            // Update Title
+            document.getElementById('eventNameText').innerText = eventTitle;
+
+            // Generate Class Level Buttons (From Col G)
+            buildClassButtons();
+
+            // Filter Students
+            filterAndRenderData();
+        }
+
+        // Generate Dynamic Class Filter Buttons
+        function buildClassButtons() {
+            const container = document.getElementById('classButtonsContainer');
+            // Extract unique class levels from Column G
+            const classes = [...new Set(allStudents.map(s => s.classLevel || 'ไม่ระบุ'))].filter(Boolean).sort();
+
+            let html = `
+                <button onclick="filterByClass('ALL')" class="class-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 whitespace-nowrap ${currentClassFilter === 'ALL' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" data-class="ALL">
+                    <i class="fa-solid fa-list-ul"></i> ระดับชั้นทั้งหมด
+                </button>
             `;
 
-            // Radio selections
-            const radios = document.getElementsByName("att-status");
-            const isAtt = student.check === "เข้าร่วม";
-            radios[0].checked = isAtt;
-            radios[1].checked = !isAtt;
+            classes.forEach(cls => {
+                const isSelected = currentClassFilter === cls;
+                const activeClass = isSelected ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200';
+                html += `
+                    <button onclick="filterByClass('${cls}')" class="class-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 whitespace-nowrap ${activeClass}" data-class="${cls}">
+                        <i class="fa-solid fa-graduation-cap"></i> ${cls}
+                    </button>
+                `;
+            });
 
-            document.getElementById("attendance-modal").classList.remove("hidden");
-        }
+            container.innerHTML = html;
 
-        function closeAttendanceModal() {
-            document.getElementById("attendance-modal").classList.add("hidden");
-        }
-
-        async function handleAttendanceSubmit(e) {
-            e.preventDefault();
-            const id = document.getElementById("att-student-id").value;
-            const remark = document.getElementById("att-remark").value.trim();
-            const radios = document.getElementsByName("att-status");
-            let checkVal = "เข้าร่วม";
-            for (let r of radios) {
-                if (r.checked) checkVal = r.value;
-            }
-
-            const student = appState.students.find(s => s.id === id);
-            if (student) {
-                student.check = checkVal;
-                student.remark = remark;
-
-                // Sync Live Backend if active
-                if (appState.isLiveMode && appState.webAppUrl) {
-                    try {
-                        await fetch(appState.webAppUrl, {
-                            method: "POST",
-                            mode: "no-cors",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                action: "updateAttendance",
-                                studentId: id,
-                                check: checkVal,
-                                remark: remark
-                            })
-                        });
-                        showToast(`บันทึกสถานะเรียบร้อย (Sync Google Sheet)`, "success");
-                    } catch (err) {
-                        showToast("บันทึกข้อมูลในเครื่องเรียบร้อย (มีปัญหา Sync)", "warning");
-                    }
-                } else {
-                    saveMockDataToStorage();
-                    showToast(`บันทึกสถานะ ${student.firstName} เป็น "${checkVal}" เรียบร้อย`, "success");
-                }
-
-                closeAttendanceModal();
-                renderAll();
+            // Update modal dropdown for classes
+            const modalSelect = document.getElementById('editClassLevel');
+            if (modalSelect) {
+                modalSelect.innerHTML = classes.map(c => `<option value="${c}">${c}</option>`).join('');
             }
         }
 
+        // Filter and Render Logic
+        function filterAndRenderData() {
+            // 1. Filter by Selected Class
+            let dataset = allStudents;
+            if (currentClassFilter !== 'ALL') {
+                dataset = dataset.filter(s => s.classLevel === currentClassFilter);
+            }
 
-        // 2. Edit Info Modal (Cols B, C, D, F)
+            // Update Class Dashboard Stats Summary
+            const classTotalCount = dataset.length;
+            const classAttendedCount = dataset.filter(s => s.check).length;
+            const classPercentage = classTotalCount > 0 ? Math.round((classAttendedCount / classTotalCount) * 100) : 0;
+
+            document.getElementById('selectedClassName').innerText = currentClassFilter === 'ALL' ? 'แสดงระดับชั้น: ทั้งหมด' : `แสดงระดับชั้น: ${currentClassFilter}`;
+            document.getElementById('filterTotalCount').innerText = classTotalCount;
+            document.getElementById('filterAttendedCount').innerText = classAttendedCount;
+            document.getElementById('filterPercentage').innerText = `${classPercentage}%`;
+
+            // Global Dashboard Counters
+            const grandTotal = allStudents.length;
+            const grandAttended = allStudents.filter(s => s.check).length;
+
+            document.getElementById('totalStudentsCount').innerText = grandTotal;
+            document.getElementById('attendedStudentsCount').innerText = grandAttended;
+
+            // Generate Detailed Class Level Breakdown Cards
+            renderClassStatsGrid();
+
+            // Update Doughnut Chart
+            updateChart(classAttendedCount, classTotalCount);
+
+            // 2. Filter by Status Pill (ALL / CHECKED / UNCHECKED)
+            const countAll = dataset.length;
+            const countChecked = dataset.filter(s => s.check).length;
+            const countUnchecked = countAll - countChecked;
+
+            document.getElementById('countPillAll').innerText = countAll;
+            document.getElementById('countPillChecked').innerText = countChecked;
+            document.getElementById('countPillUnchecked').innerText = countUnchecked;
+
+            if (currentStatusFilter === 'CHECKED') {
+                dataset = dataset.filter(s => s.check);
+            } else if (currentStatusFilter === 'UNCHECKED') {
+                dataset = dataset.filter(s => !s.check);
+            }
+
+            // 3. Search Query Filter
+            if (searchQuery.trim() !== '') {
+                const q = searchQuery.toLowerCase().trim();
+                dataset = dataset.filter(s => 
+                    s.studentId.toLowerCase().includes(q) ||
+                    s.firstName.toLowerCase().includes(q) ||
+                    s.lastName.toLowerCase().includes(q) ||
+                    s.prefix.toLowerCase().includes(q) ||
+                    s.no.toLowerCase().includes(q) ||
+                    s.phone.toLowerCase().includes(q) ||
+                    (s.note && s.note.toLowerCase().includes(q))
+                );
+            }
+
+            filteredStudents = dataset;
+            document.getElementById('showingCount').innerText = filteredStudents.length;
+
+            // Render Views
+            renderTableView(filteredStudents);
+            renderMobileView(filteredStudents);
+
+            // Show Empty State if no rows
+            const emptyEl = document.getElementById('emptyState');
+            if (filteredStudents.length === 0) {
+                emptyEl.classList.remove('hidden');
+            } else {
+                emptyEl.classList.add('hidden');
+            }
+        }
+
+        // Render Class Breakdown Grid inside Dashboard
+        function renderClassStatsGrid() {
+            const grid = document.getElementById('classLevelStatsGrid');
+            const classes = [...new Set(allStudents.map(s => s.classLevel || 'ไม่ระบุ'))].filter(Boolean).sort();
+
+            let html = '';
+            classes.forEach(cls => {
+                const total = allStudents.filter(s => s.classLevel === cls).length;
+                const attended = allStudents.filter(s => s.classLevel === cls && s.check).length;
+                const pct = total > 0 ? Math.round((attended / total) * 100) : 0;
+
+                html += `
+                    <div onclick="filterByClass('${cls}')" class="p-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-indigo-50/50 hover:border-indigo-200 cursor-pointer transition flex flex-col justify-between">
+                        <div class="font-bold text-slate-700 truncate">${cls}</div>
+                        <div class="flex items-center justify-between mt-1 text-[11px]">
+                            <span class="text-slate-500">มาแล้ว: <strong class="text-emerald-600">${attended}</strong>/${total}</span>
+                            <span class="font-bold text-indigo-600">${pct}%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-1 mt-1.5 overflow-hidden">
+                            <div class="bg-emerald-500 h-1 rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            grid.innerHTML = html;
+        }
+
+        // Render Desktop Table Row with Red Text Highlight for Edited Columns
+        function renderTableView(list) {
+            const tbody = document.getElementById('studentTableBody');
+            tbody.innerHTML = '';
+
+            list.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50/80 transition text-slate-700';
+
+                // Check edited fields
+                const isPrefixEdited = item.editedFields && item.editedFields.includes('prefix');
+                const isFirstNameEdited = item.editedFields && item.editedFields.includes('firstName');
+                const isLastNameEdited = item.editedFields && item.editedFields.includes('lastName');
+                const isPhoneEdited = item.editedFields && item.editedFields.includes('phone');
+                const isClassEdited = item.editedFields && item.editedFields.includes('classLevel');
+
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 text-center font-mono text-slate-400">${item.no || '-'}</td>
+                    <td class="py-2.5 px-3 font-mono font-medium text-slate-800">${item.studentId}</td>
+                    <td class="py-2.5 px-3 ${isPrefixEdited ? 'edited-cell-highlight' : ''}">${item.prefix}</td>
+                    <td class="py-2.5 px-3 font-medium ${isFirstNameEdited ? 'edited-cell-highlight' : ''}">${item.firstName}</td>
+                    <td class="py-2.5 px-3 font-medium ${isLastNameEdited ? 'edited-cell-highlight' : ''}">${item.lastName}</td>
+                    <td class="py-2.5 px-3 font-mono text-slate-600 ${isPhoneEdited ? 'edited-cell-highlight' : ''}">${item.phone || '-'}</td>
+                    <td class="py-2.5 px-3 ${isClassEdited ? 'edited-cell-highlight' : ''}">
+                        <span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                            ${item.classLevel}
+                        </span>
+                    </td>
+                    <td class="py-2.5 px-3 text-center">
+                        ${item.check 
+                            ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                <i class="fa-solid fa-check text-emerald-600"></i> เข้าร่วมแล้ว
+                               </span>`
+                            : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                                <i class="fa-solid fa-clock text-amber-500"></i> ยังไม่เข้าร่วม
+                               </span>`
+                        }
+                    </td>
+                    <td class="py-2.5 px-3 text-slate-500 max-w-[150px] truncate" title="${item.note || ''}">
+                        ${item.note || '-'}
+                    </td>
+                    <td class="py-2.5 px-3 text-center">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button onclick="openAttendanceModal('${item.studentId}')" title="เช็คชื่อ" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-medium transition flex items-center gap-1 shadow-xs">
+                                <i class="fa-solid fa-check"></i> เข้าร่วม
+                            </button>
+                            <button onclick="openEditModal('${item.studentId}')" title="แก้ไขข้อมูล" class="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Render Mobile List Card View
+        function renderMobileView(list) {
+            const container = document.getElementById('studentMobileList');
+            container.innerHTML = '';
+
+            list.forEach(item => {
+                const isPrefixEdited = item.editedFields && item.editedFields.includes('prefix');
+                const isFirstNameEdited = item.editedFields && item.editedFields.includes('firstName');
+                const isLastNameEdited = item.editedFields && item.editedFields.includes('lastName');
+                const isPhoneEdited = item.editedFields && item.editedFields.includes('phone');
+                const isClassEdited = item.editedFields && item.editedFields.includes('classLevel');
+
+                const card = document.createElement('div');
+                card.className = 'p-3.5 space-y-2 bg-white';
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-mono">เลขที่ ${item.no || '-'}</span>
+                                <span class="text-xs font-mono font-bold text-slate-500">${item.studentId}</span>
+                                <span class="px-2 py-0.5 text-[10px] rounded font-medium bg-indigo-50 text-indigo-700 border border-indigo-100 ${isClassEdited ? 'edited-cell-highlight' : ''}">${item.classLevel}</span>
+                            </div>
+                            <div class="font-bold text-sm text-slate-800 mt-1">
+                                <span class="${isPrefixEdited ? 'edited-cell-highlight' : ''}">${item.prefix}</span>
+                                <span class="${isFirstNameEdited ? 'edited-cell-highlight' : ''}">${item.firstName}</span>
+                                <span class="${isLastNameEdited ? 'edited-cell-highlight' : ''}">${item.lastName}</span>
+                            </div>
+                        </div>
+
+                        <!-- Check Status Badge -->
+                        <div>
+                            ${item.check 
+                                ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                                    <i class="fa-solid fa-circle-check text-emerald-600"></i> เข้าร่วม
+                                   </span>`
+                                : `<span class="px-2.5 py-1 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
+                                    <i class="fa-solid fa-circle-xmark text-amber-500"></i> ยังไม่เข้าร่วม
+                                   </span>`
+                            }
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between text-xs text-slate-500 pt-1 border-t border-slate-50">
+                        <div class="flex items-center gap-2">
+                            <span><i class="fa-solid fa-phone text-slate-400"></i> <span class="${isPhoneEdited ? 'edited-cell-highlight' : ''}">${item.phone || '-'}</span></span>
+                            ${item.note ? `<span class="truncate max-w-[120px] text-slate-400"><i class="fa-solid fa-note-sticky"></i> ${item.note}</span>` : ''}
+                        </div>
+
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="openAttendanceModal('${item.studentId}')" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-medium shadow-xs">
+                                <i class="fa-solid fa-check"></i> เช็คชื่อ
+                            </button>
+                            <button onclick="openEditModal('${item.studentId}')" class="p-1.5 text-slate-500 hover:text-amber-600 bg-slate-100 rounded-lg">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Filter Actions
+        function filterByClass(cls) {
+            currentClassFilter = cls;
+            buildClassButtons();
+            filterAndRenderData();
+        }
+
+        function setStatusFilter(status) {
+            currentStatusFilter = status;
+            document.querySelectorAll('.status-pill').forEach(btn => {
+                btn.className = 'status-pill flex-1 sm:flex-none px-3 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition';
+            });
+            const activeBtn = document.getElementById(`statusFilter${status}`);
+            if (activeBtn) {
+                activeBtn.className = 'status-pill flex-1 sm:flex-none px-3 py-1 rounded-lg text-xs font-medium transition bg-slate-800 text-white shadow-xs';
+            }
+            filterAndRenderData();
+        }
+
+        function handleSearch() {
+            searchQuery = document.getElementById('searchInput').value;
+            filterAndRenderData();
+        }
+
+        // Modal Handlers: EDIT STUDENT INFO (Cols B, C, D, F, G)
         function openEditModal(studentId) {
-            const student = appState.students.find(s => s.id === studentId);
+            const student = allStudents.find(s => s.studentId === studentId);
             if (!student) return;
 
-            document.getElementById("edit-student-id").value = student.id;
-            document.getElementById("edit-id-display").value = student.id;
-            document.getElementById("edit-no-display").value = student.no || '-';
+            document.getElementById('editStudentId').value = student.studentId;
+            document.getElementById('displayEditId').value = student.studentId;
+            document.getElementById('displayEditNo').value = student.no || '-';
+            document.getElementById('editPrefix').value = student.prefix;
+            document.getElementById('editFirstName').value = student.firstName;
+            document.getElementById('editLastName').value = student.lastName;
+            document.getElementById('editPhone').value = student.phone || '';
 
-            document.getElementById("edit-prefix").value = student.prefix || 'นาย';
-            document.getElementById("edit-firstname").value = student.firstName || '';
-            document.getElementById("edit-lastname").value = student.lastName || '';
-            document.getElementById("edit-classlevel").value = student.classLevel || 'ปวช.1';
+            const classSelect = document.getElementById('editClassLevel');
+            if (classSelect) classSelect.value = student.classLevel;
 
-            document.getElementById("edit-modal").classList.remove("hidden");
+            document.getElementById('editModal').classList.remove('hidden');
         }
 
         function closeEditModal() {
-            document.getElementById("edit-modal").classList.add("hidden");
+            document.getElementById('editModal').classList.add('hidden');
         }
 
-        async function handleEditSubmit(e) {
+        async function saveStudentInfo(e) {
             e.preventDefault();
-            const id = document.getElementById("edit-student-id").value;
-            const prefix = document.getElementById("edit-prefix").value;
-            const firstName = document.getElementById("edit-firstname").value.trim();
-            const lastName = document.getElementById("edit-lastname").value.trim();
-            const classLevel = document.getElementById("edit-classlevel").value;
+            const id = document.getElementById('editStudentId').value;
+            const prefix = document.getElementById('editPrefix').value;
+            const firstName = document.getElementById('editFirstName').value.trim();
+            const lastName = document.getElementById('editLastName').value.trim();
+            const phone = document.getElementById('editPhone').value.trim();
+            const classLevel = document.getElementById('editClassLevel').value;
 
-            const student = appState.students.find(s => s.id === id);
-            if (student) {
-                // Check which fields changed and mark them as edited for RED TEXT highlighting
-                if (!student.editedFields) student.editedFields = [];
+            const student = allStudents.find(s => s.studentId === id);
+            if (!student) return;
 
-                if (student.prefix !== prefix && !student.editedFields.includes("prefix")) student.editedFields.push("prefix");
-                if (student.firstName !== firstName && !student.editedFields.includes("firstName")) student.editedFields.push("firstName");
-                if (student.lastName !== lastName && !student.editedFields.includes("lastName")) student.editedFields.push("lastName");
-                if (student.classLevel !== classLevel && !student.editedFields.includes("classLevel")) student.editedFields.push("classLevel");
+            // Track modified columns to highlight red text in UI
+            if (!student.editedFields) student.editedFields = [];
+            
+            if (student.prefix !== prefix && !student.editedFields.includes('prefix')) student.editedFields.push('prefix');
+            if (student.firstName !== firstName && !student.editedFields.includes('firstName')) student.editedFields.push('firstName');
+            if (student.lastName !== lastName && !student.editedFields.includes('lastName')) student.editedFields.push('lastName');
+            if (student.phone !== phone && !student.editedFields.includes('phone')) student.editedFields.push('phone');
+            if (student.classLevel !== classLevel && !student.editedFields.includes('classLevel')) student.editedFields.push('classLevel');
 
-                student.prefix = prefix;
-                student.firstName = firstName;
-                student.lastName = lastName;
-                student.classLevel = classLevel;
+            // Apply local changes immediately
+            student.prefix = prefix;
+            student.firstName = firstName;
+            student.lastName = lastName;
+            student.phone = phone;
+            student.classLevel = classLevel;
 
-                // Sync Live Backend
-                if (appState.isLiveMode && appState.webAppUrl) {
-                    try {
-                        await fetch(appState.webAppUrl, {
-                            method: "POST",
-                            mode: "no-cors",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                action: "updateInfo",
-                                studentId: id,
-                                prefix: prefix,
-                                firstName: firstName,
-                                lastName: lastName,
-                                classLevel: classLevel
-                            })
-                        });
-                        showToast("อัปเดตข้อมูลนักศึกษาลง Google Sheet เรียบร้อย", "success");
-                    } catch (err) {
-                        showToast("บันทึกการปรับปรุงข้อมูลเรียบร้อย", "warning");
+            closeEditModal();
+            renderApp();
+
+            // Sync with Google Sheet Backend
+            if (apiWebUrl) {
+                try {
+                    const saveBtn = document.getElementById('saveInfoBtn');
+                    saveBtn.disabled = true;
+
+                    const res = await fetch(apiWebUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({
+                            action: 'updateStudentInfo',
+                            studentId: id,
+                            prefix: prefix,
+                            firstName: firstName,
+                            lastName: lastName,
+                            phone: phone,
+                            classLevel: classLevel
+                        })
+                    });
+                    const result = await res.json();
+                    if (result.status === 'success') {
+                        showNotification('อัปเดตข้อมูลและเปลี่ยนสีตัวอักษรเป็นสีแดงเรียบร้อยแล้ว', 'success');
+                    } else {
+                        showNotification('ไม่สามารถบันทึกลง Google Sheet: ' + result.message, 'error');
                     }
-                } else {
-                    saveMockDataToStorage();
-                    showToast("แก้ไขข้อมูลเรียบร้อย (ตัวอักษรที่แก้ไขจะแสดงเป็นสีแดง)", "info");
+                } catch (err) {
+                    console.error(err);
+                    showNotification('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'error');
+                } finally {
+                    document.getElementById('saveInfoBtn').disabled = false;
                 }
-
-                closeEditModal();
-                renderAll();
-            }
-        }
-
-
-        // =========================================================================
-        // CONFIG & UTILITY FUNCTIONS
-        // =========================================================================
-        function openConfigModal() {
-            document.getElementById("web-app-url-input").value = appState.webAppUrl || "";
-            document.getElementById("config-modal").classList.remove("hidden");
-        }
-
-        function closeConfigModal() {
-            document.getElementById("config-modal").classList.add("hidden");
-        }
-
-        function switchConfigTab(tab) {
-            const btnLink = document.getElementById("tab-btn-link");
-            const btnScript = document.getElementById("tab-btn-script");
-            const tabLink = document.getElementById("tab-content-link");
-            const tabScript = document.getElementById("tab-content-script");
-
-            if (tab === 'link') {
-                btnLink.className = "px-4 py-2 text-xs font-bold border-b-2 border-indigo-600 text-indigo-600";
-                btnScript.className = "px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 border-b-2 border-transparent";
-                tabLink.classList.remove("hidden");
-                tabScript.classList.add("hidden");
             } else {
-                btnScript.className = "px-4 py-2 text-xs font-bold border-b-2 border-indigo-600 text-indigo-600";
-                btnLink.className = "px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 border-b-2 border-transparent";
-                tabScript.classList.remove("hidden");
-                tabLink.classList.add("hidden");
+                showNotification('บันทึกการแก้ไขข้อมูลในโหมดทดสอบเรียบร้อยแล้ว', 'info');
             }
         }
 
-        function saveWebAppUrl() {
-            const url = document.getElementById("web-app-url-input").value.trim();
+        // Modal Handlers: ATTENDANCE & NOTE (Cols H, I)
+        function openAttendanceModal(studentId) {
+            const student = allStudents.find(s => s.studentId === studentId);
+            if (!student) return;
+
+            document.getElementById('attStudentId').value = student.studentId;
+            document.getElementById('attStudentName').innerText = `${student.prefix} ${student.firstName} ${student.lastName}`;
+            document.getElementById('attStudentCode').innerText = student.studentId;
+            document.getElementById('attStudentClass').innerText = student.classLevel;
+
+            if (student.check) {
+                document.getElementById('statusPresent').checked = true;
+            } else {
+                document.getElementById('statusPresent').checked = true; // Default to present for fast single-tap
+            }
+            document.getElementById('attNote').value = student.note || '';
+
+            document.getElementById('attendanceModal').classList.remove('hidden');
+        }
+
+        function closeAttendanceModal() {
+            document.getElementById('attendanceModal').classList.add('hidden');
+        }
+
+        async function saveAttendance(e) {
+            e.preventDefault();
+            const id = document.getElementById('attStudentId').value;
+            const isChecked = document.getElementById('statusPresent').checked;
+            const note = document.getElementById('attNote').value.trim();
+
+            const student = allStudents.find(s => s.studentId === id);
+            if (!student) return;
+
+            student.check = isChecked;
+            student.note = note;
+
+            closeAttendanceModal();
+            renderApp();
+
+            // Sync to Apps Script
+            if (apiWebUrl) {
+                try {
+                    const res = await fetch(apiWebUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({
+                            action: 'checkAttendance',
+                            studentId: id,
+                            check: isChecked,
+                            note: note
+                        })
+                    });
+                    const result = await res.json();
+                    if (result.status === 'success') {
+                        showNotification('บันทึกการเข้าร่วมเรียบร้อยแล้ว', 'success');
+                    } else {
+                        showNotification('บันทึกไม่สำเร็จ: ' + result.message, 'error');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showNotification('บันทึกในโหมดออฟไลน์แล้ว', 'info');
+                }
+            } else {
+                showNotification('บันทึกสถานะการเข้าร่วมสำเร็จ (โหมดทดสอบ)', 'success');
+            }
+        }
+
+        // API Config Modal Handlers
+        function openApiModal() {
+            document.getElementById('apiUrlInput').value = apiWebUrl;
+            document.getElementById('apiModal').classList.remove('hidden');
+        }
+
+        function closeApiModal() {
+            document.getElementById('apiModal').classList.add('hidden');
+        }
+
+        function saveApiUrl() {
+            const url = document.getElementById('apiUrlInput').value.trim();
+            apiWebUrl = url;
+            localStorage.setItem('gas_app_url', url);
+            closeApiModal();
+
             if (url) {
-                localStorage.setItem("sheet_web_app_url", url);
-                appState.webAppUrl = url;
-                appState.isLiveMode = true;
-                updateConnectionStatus(true);
-                closeConfigModal();
-                fetchLiveData();
+                document.getElementById('demoNoticeBar').classList.add('hidden');
+                fetchData(true);
             } else {
-                useDemoMode();
+                document.getElementById('demoNoticeBar').classList.remove('hidden');
+                showNotification('ยกเลิกการเชื่อมต่อ URL แล้ว', 'info');
             }
-        }
-
-        function useDemoMode() {
-            localStorage.removeItem("sheet_web_app_url");
-            appState.webAppUrl = "";
-            appState.isLiveMode = false;
-            updateConnectionStatus(false);
-            closeConfigModal();
-            loadInitialData();
-            showToast("สลับเข้าสู่โหมดข้อมูลจำลอง (Demo Mode)", "info");
         }
 
         function copyAppsScriptCode() {
-            const codeText = document.getElementById("apps-script-code").innerText;
-            const tempTextArea = document.createElement("textarea");
-            tempTextArea.value = codeText;
-            document.body.appendChild(tempTextArea);
-            tempTextArea.select();
-            document.execCommand("copy");
-            document.body.removeChild(tempTextArea);
-            showToast("คัดลอกโค้ด Apps Script เรียบร้อยแล้ว!", "success");
+            const code = document.getElementById('appsScriptCodeSnippet').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                showNotification('คัดลอกโค้ด Apps Script เรียบร้อยแล้ว', 'success');
+            });
         }
 
-        // Toast Notification System
-        function showToast(message, type = "info") {
-            const container = document.getElementById("toast-container");
-            const toast = document.createElement("div");
+        // Helper Notification Toast
+        function showNotification(message, type = 'success') {
+            let bg = '#16a34a';
+            if (type === 'error') bg = '#dc2626';
+            if (type === 'info') bg = '#2563eb';
 
-            let bgClass = "bg-slate-800 text-white";
-            let icon = "fa-circle-info text-blue-400";
-
-            if (type === "success") {
-                bgClass = "bg-slate-900 text-white border-l-4 border-l-emerald-500";
-                icon = "fa-circle-check text-emerald-400";
-            } else if (type === "error") {
-                bgClass = "bg-slate-900 text-white border-l-4 border-l-rose-500";
-                icon = "fa-triangle-exclamation text-rose-400";
-            } else if (type === "warning") {
-                bgClass = "bg-slate-900 text-white border-l-4 border-l-amber-500";
-                icon = "fa-circle-exclamation text-amber-400";
-            }
-
-            toast.className = `${bgClass} px-4 py-3 rounded-xl shadow-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto max-w-sm`;
-            toast.innerHTML = `
-                <i class="fa-solid ${icon} text-base shrink-0"></i>
-                <span class="flex-1">${message}</span>
-            `;
-
-            container.appendChild(toast);
-
-            // Animate in
-            setTimeout(() => {
-                toast.classList.remove("translate-y-2", "opacity-0");
-            }, 10);
-
-            // Auto dismiss
-            setTimeout(() => {
-                toast.classList.add("opacity-0", "translate-y-2");
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
+            Toastify({
+                text: message,
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                style: {
+                    background: bg,
+                    borderRadius: "12px",
+                    fontFamily: "Kanit, sans-serif",
+                    fontSize: "13px",
+                    boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)"
+                }
+            }).showToast();
         }
     </script>
 </body>

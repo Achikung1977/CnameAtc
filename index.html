@@ -70,11 +70,6 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-        }
     </style>
 </head>
 <body class="h-full bg-slate-100 text-slate-800 flex flex-col min-h-screen selection:bg-brand-500 selection:text-white">
@@ -140,7 +135,7 @@
                     </div>
                     <div class="mt-2">
                         <div class="text-3xl font-extrabold text-slate-900" id="totalStudentsCount">0</div>
-                        <p class="text-[11px] text-slate-500 mt-1" id="totalByClassSummary">แยกตามระดับชั้น: -</p>
+                        <p class="text-[11px] text-slate-500 mt-1" id="totalByClassSummary">ข้อมูลภาพรวมทั้งระบบ</p>
                     </div>
                 </div>
 
@@ -155,7 +150,7 @@
                     </div>
                     <div class="mt-2">
                         <div class="text-3xl font-extrabold text-emerald-600" id="attendedStudentsCount">0</div>
-                        <p class="text-[11px] text-emerald-700/80 mt-1" id="attendedByClassSummary">แยกตามระดับชั้น: -</p>
+                        <p class="text-[11px] text-emerald-700/80 mt-1" id="attendedByClassSummary">คิดเป็น <span id="grandPercentage" class="font-bold text-emerald-600">0%</span> ของทั้งหมด</p>
                     </div>
                 </div>
 
@@ -178,29 +173,34 @@
             </div>
         </section>
 
-        <!-- 2. CLASS LEVEL BUTTON FILTERS (Col G) -->
-        <section class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-            <div class="flex items-center justify-between">
-                <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+        <!-- 2. CLASS LEVEL LIST BOX FILTER (Col G) -->
+        <section class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <label for="classSelectListBox" class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                     <i class="fa-solid fa-filter text-indigo-600"></i> เลือกระดับชั้นเพื่อเรียกดูข้อมูล (คอลัมน์ G)
                 </label>
-                <span class="text-[11px] text-slate-400">คลิกปุ่มเพื่อกรองตามระดับชั้น</span>
+                <span class="text-[11px] text-slate-400">เลือกจากรายการด้านล่างเพื่อกรองข้อมูล</span>
             </div>
             
-            <div id="classButtonsContainer" class="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar">
-                <!-- Dynamic Buttons generated from Column G values -->
-                <button onclick="filterByClass('ALL')" class="class-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 whitespace-nowrap bg-indigo-600 text-white shadow-sm" data-class="ALL">
-                    <i class="fa-solid fa-list-ul"></i> ระดับชั้นทั้งหมด
-                </button>
+            <!-- List Box Dropdown -->
+            <div class="relative">
+                <select id="classSelectListBox" onchange="handleClassSelectChange(this.value)" 
+                    class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs sm:text-sm font-medium rounded-xl p-3 pr-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition cursor-pointer appearance-none shadow-xs">
+                    <option value="ALL">≡ ระดับชั้นทั้งหมด</option>
+                    <!-- Dynamic Class Options Generated From Col G -->
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                </div>
             </div>
         </section>
 
         <!-- ACTIVE FILTER STATUS BANNER -->
         <div id="activeClassBanner" class="bg-indigo-50 border border-indigo-100 rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-indigo-900">
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
                 <span class="font-bold text-indigo-700" id="selectedClassName">แสดงระดับชั้น: ทั้งหมด</span>
                 <span class="text-slate-400">|</span>
-                <span>จำนวนนักศึกษาทั้งหมด: <strong id="filterTotalCount">0</strong> คน</span>
+                <span>จำนวนนักศึกษา: <strong id="filterTotalCount">0</strong> คน</span>
                 <span class="text-slate-400">|</span>
                 <span>เข้าร่วม: <strong id="filterAttendedCount" class="text-emerald-600">0</strong> คน</span>
             </div>
@@ -350,7 +350,7 @@
                     <div>
                         <label class="block text-slate-600 font-medium mb-1">ระดับชั้น (Col G)</label>
                         <select id="editClassLevel" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                            <!-- Dynamic options + standard fallback -->
+                            <!-- Dynamic options -->
                         </select>
                     </div>
                 </div>
@@ -432,105 +432,9 @@
             <div class="p-4 space-y-4 text-xs">
                 <div>
                     <label class="block text-slate-700 font-bold mb-1">Google Apps Script Web App URL</label>
-                    <input type="url" id="apiUrlInput" placeholder="https://achikung1977.github.io/CnameAtc/" 
+                    <input type="url" id="apiUrlInput" placeholder="https://script.google.com/macros/s/.../exec" 
                         class="w-full border border-slate-300 rounded-xl p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono text-[11px]">
                     <p class="text-[11px] text-slate-500 mt-1">วาง Web App URL ที่สคริปต์ถูก Publish เป็น "Anyone" เรียบร้อยแล้ว</p>
-                </div>
-
-                <!-- Accordion for Code Instruction -->
-                <div class="border border-indigo-100 bg-indigo-50/50 rounded-xl p-3 space-y-2">
-                    <div class="font-bold text-indigo-900 flex items-center justify-between">
-                        <span><i class="fa-solid fa-code text-indigo-600"></i> โค้ดสำหรับวางใน Google Apps Script (Code.gs)</span>
-                        <button onclick="copyAppsScriptCode()" class="text-[10px] bg-indigo-600 text-white px-2 py-1 rounded hover:bg-indigo-700">
-                            <i class="fa-regular fa-copy"></i> คัดลอกโค้ด
-                        </button>
-                    </div>
-                    <pre class="bg-slate-900 text-emerald-400 p-2.5 rounded-lg text-[10px] overflow-x-auto max-h-40 font-mono leading-relaxed" id="appsScriptCodeSnippet">
-// Google Apps Script backend for Spreadsheet ID: 1JaRmJrsninnCj6DmlysrnXeSghOUjPgg3ZLN0znqULc
-const SPREADSHEET_ID = "1JaRmJrsninnCj6DmlysrnXeSghOUjPgg3ZLN0znqULc";
-
-function doGet(e) {
-  try {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    let eventName = "กิจกรรมเช็คชื่อเข้าร่วม";
-    const actSheet = ss.getSheetByName("act");
-    if (actSheet) {
-      const actData = actSheet.getRange("A1:A2").getValues();
-      if (actData[0] && actData[0][0]) eventName = actData[0][0];
-      if (actData[1] && actData[1][0]) eventName += " (" + actData[1][0] + ")";
-    }
-
-    const dataSheet = ss.getSheetByName("data");
-    if (!dataSheet) return createJsonResponse({ status: "error", message: "ไม่พบ Sheet ชื่อ 'data'" });
-
-    const rows = dataSheet.getDataRange().getValues();
-    const students = [];
-    for (let i = 1; i < rows.length; i++) {
-      const row = rows[i];
-      if (!row[0]) continue;
-      const checkVal = String(row[7] || "").toLowerCase().trim(); // Col H
-      students.push({
-        rowIndex: i + 1,
-        studentId: String(row[0] || ""),     // Col A
-        prefix: String(row[1] || ""),        // Col B
-        firstName: String(row[2] || ""),     // Col C
-        lastName: String(row[3] || ""),      // Col D
-        no: String(row[4] || ""),            // Col E
-        phone: String(row[5] || ""),         // Col F (เบอร์โทรนักศึกษา)
-        classLevel: String(row[6] || "ไม่ระบุ"), // Col G (ระดับชั้น)
-        check: checkVal === "true" || checkVal === "checked" || checkVal === "1" || checkVal === "เข้าร่วม", // Col H
-        note: String(row[8] || ""),          // Col I (หมายเหตุ)
-        editedFields: []
-      });
-    }
-    return createJsonResponse({ status: "success", eventName: eventName, data: students });
-  } catch (err) {
-    return createJsonResponse({ status: "error", message: err.toString() });
-  }
-}
-
-function doPost(e) {
-  try {
-    const contents = JSON.parse(e.postData.contents);
-    const action = contents.action;
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    const dataSheet = ss.getSheetByName("data");
-
-    if (action === "checkAttendance") {
-      const rowIdx = findRowByStudentId(dataSheet, String(contents.studentId));
-      if (rowIdx !== -1) {
-        dataSheet.getRange(rowIdx, 8).setValue(contents.check ? "เข้าร่วม" : ""); // Col H
-        dataSheet.getRange(rowIdx, 9).setValue(contents.note || ""); // Col I
-        return createJsonResponse({ status: "success" });
-      }
-    } else if (action === "updateStudentInfo") {
-      const rowIdx = findRowByStudentId(dataSheet, String(contents.studentId));
-      if (rowIdx !== -1) {
-        dataSheet.getRange(rowIdx, 2).setValue(contents.prefix);    // Col B
-        dataSheet.getRange(rowIdx, 3).setValue(contents.firstName); // Col C
-        dataSheet.getRange(rowIdx, 4).setValue(contents.lastName);  // Col D
-        dataSheet.getRange(rowIdx, 6).setValue(contents.phone);     // Col F
-        dataSheet.getRange(rowIdx, 7).setValue(contents.classLevel);// Col G
-        return createJsonResponse({ status: "success" });
-      }
-    }
-    return createJsonResponse({ status: "error", message: "Invalid action" });
-  } catch (err) {
-    return createJsonResponse({ status: "error", message: err.toString() });
-  }
-}
-
-function findRowByStudentId(sheet, studentId) {
-  const data = sheet.getRange("A:A").getValues();
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i][0]) === studentId) return i + 1;
-  }
-  return -1;
-}
-
-function createJsonResponse(data) {
-  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
-}</pre>
                 </div>
 
                 <div class="pt-2 flex items-center justify-end gap-2">
@@ -545,47 +449,17 @@ function createJsonResponse(data) {
 
     <!-- MAIN JAVASCRIPT LOGIC -->
     <script>
-        // Global App State
-        let apiWebUrl = localStorage.getItem('gas_app_url') || 'https://script.google.com/macros/s/AKfycbxO1wz9jhSP46RFUl36_M4PFy0nKFTo7CFOqz84iZEEAkboh5RtWiiiYQx49JJOIic/exec';
+        // Global App State - PERMANENT GOOGLE APPS SCRIPT URL SET AS DEFAULT
+        const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbxO1wz9jhSP46RFUl36_M4PFy0nKFTo7CFOqz84iZEEAkboh5RtWiiiYQx49JJOIic/exec';
+        let apiWebUrl = localStorage.getItem('gas_app_url') || DEFAULT_URL;
+
         let allStudents = [];
         let filteredStudents = [];
-        let eventTitle = 'กิจกรรมเช็คชื่อการเข้าร่วม';
+        let eventTitle = 'กิจกรรมเช็คชื่อเข้าร่วม';
         let currentClassFilter = 'ALL';
         let currentStatusFilter = 'ALL';
         let searchQuery = '';
         let attendanceChart = null;
-
-        // Demo Mock Data Generator (Used if Google Sheet Web App URL is not provided yet)
-        const sampleClasses = ['ปวช.1/18ก69', 'ปวช.2/18ก69', 'ปวส.1/18ก69', 'ปวส.2/18ก69'];
-        const samplePrefixes = ['นาย', 'นางสาว'];
-        const sampleFirstNames = ['ฐนวรรณ', 'จิราวดี', 'ภัทราพร', 'อาทิตยา', 'ชาญณรงค์', 'กานต์ธิดา', 'สมฤดี', 'จุฬาลักษณ์', 'กิตติศักดิ์', 'นพรัตน์', 'ศุภโชค', 'วรรณิสา'];
-        const sampleLastNames = ['หัตถา', 'สุภาวะ', 'คุณทน', 'เสลจุล', 'ไพโรจน์', 'อันชื่น', 'เยาวบุตร', 'ติละบาล', 'สุขเจริญ', 'มั่นคง', 'รัตนโกสินทร์', 'บุญมี'];
-
-        function generateMockStudents() {
-            const list = [];
-            let count = 1;
-            sampleClasses.forEach((cls, clsIdx) => {
-                for (let i = 1; i <= 8; i++) {
-                    const stId = (39200 + count).toString();
-                    const isChecked = count % 3 === 0;
-                    list.push({
-                        rowIndex: count + 1,
-                        studentId: stId,                                                 // Col A
-                        prefix: samplePrefixes[count % samplePrefixes.length],            // Col B
-                        firstName: sampleFirstNames[count % sampleFirstNames.length],     // Col C
-                        lastName: sampleLastNames[count % sampleLastNames.length],        // Col D
-                        no: i.toString(),                                                // Col E
-                        phone: `08${Math.floor(10000000 + Math.random() * 90000000)}`,    // Col F
-                        classLevel: cls,                                                 // Col G
-                        check: isChecked,                                                // Col H
-                        note: isChecked ? 'มาตรงเวลา' : '',                               // Col I
-                        editedFields: [] // Stores edited fields like ['prefix', 'firstName', 'lastName', 'phone', 'classLevel']
-                    });
-                    count++;
-                }
-            });
-            return list;
-        }
 
         // Initialize Web App
         document.addEventListener('DOMContentLoaded', () => {
@@ -595,9 +469,6 @@ function createJsonResponse(data) {
                 fetchData();
             } else {
                 document.getElementById('demoNoticeBar').classList.remove('hidden');
-                allStudents = generateMockStudents();
-                eventTitle = 'กิจกรรมปฐมนิเทศนักศึกษาใหม่ (ข้อมูลสาธิต)';
-                renderApp();
             }
         });
 
@@ -645,20 +516,13 @@ function createJsonResponse(data) {
             const spinner = document.getElementById('refreshSpinner');
             spinner.classList.add('fa-spin');
 
-            if (!apiWebUrl) {
-                setTimeout(() => {
-                    spinner.classList.remove('fa-spin');
-                    if (showToast) showNotification('อัปเดตข้อมูลสาธิตเรียบร้อย', 'info');
-                }, 500);
-                return;
-            }
-
             try {
                 const response = await fetch(apiWebUrl);
                 const result = await response.json();
 
                 if (result.status === 'success') {
                     if (result.eventName) eventTitle = result.eventName;
+                    
                     // Merge local edited state flag if present
                     const prevEdits = {};
                     allStudents.forEach(s => {
@@ -690,42 +554,40 @@ function createJsonResponse(data) {
             // Update Title
             document.getElementById('eventNameText').innerText = eventTitle;
 
-            // Generate Class Level Buttons (From Col G)
-            buildClassButtons();
+            // Populate List Box Dropdown options
+            populateClassListBoxOptions();
 
-            // Filter Students
+            // Filter & Render Data
             filterAndRenderData();
         }
 
-        // Generate Dynamic Class Filter Buttons
-        function buildClassButtons() {
-            const container = document.getElementById('classButtonsContainer');
-            // Extract unique class levels from Column G
+        // Populate Class Level List Box (<select>) options
+        function populateClassListBoxOptions() {
+            const selectEl = document.getElementById('classSelectListBox');
             const classes = [...new Set(allStudents.map(s => s.classLevel || 'ไม่ระบุ'))].filter(Boolean).sort();
 
-            let html = `
-                <button onclick="filterByClass('ALL')" class="class-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 whitespace-nowrap ${currentClassFilter === 'ALL' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" data-class="ALL">
-                    <i class="fa-solid fa-list-ul"></i> ระดับชั้นทั้งหมด
-                </button>
-            `;
+            let optionsHtml = `<option value="ALL" ${currentClassFilter === 'ALL' ? 'selected' : ''}>≡ ระดับชั้นทั้งหมด (รวมทุกระดับชั้น)</option>`;
 
             classes.forEach(cls => {
-                const isSelected = currentClassFilter === cls;
-                const activeClass = isSelected ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200';
-                html += `
-                    <button onclick="filterByClass('${cls}')" class="class-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 whitespace-nowrap ${activeClass}" data-class="${cls}">
-                        <i class="fa-solid fa-graduation-cap"></i> ${cls}
-                    </button>
-                `;
+                const totalInClass = allStudents.filter(s => s.classLevel === cls).length;
+                const attendedInClass = allStudents.filter(s => s.classLevel === cls && s.check).length;
+                const isSelected = currentClassFilter === cls ? 'selected' : '';
+                optionsHtml += `<option value="${cls}" ${isSelected}>🎓 ${cls} (มาแล้ว ${attendedInClass}/${totalInClass} คน)</option>`;
             });
 
-            container.innerHTML = html;
+            selectEl.innerHTML = optionsHtml;
 
-            // Update modal dropdown for classes
+            // Update modal dropdown for student edit form
             const modalSelect = document.getElementById('editClassLevel');
             if (modalSelect) {
                 modalSelect.innerHTML = classes.map(c => `<option value="${c}">${c}</option>`).join('');
             }
+        }
+
+        // Change Handler for List Box
+        function handleClassSelectChange(val) {
+            currentClassFilter = val;
+            filterAndRenderData();
         }
 
         // Filter and Render Logic
@@ -749,9 +611,11 @@ function createJsonResponse(data) {
             // Global Dashboard Counters
             const grandTotal = allStudents.length;
             const grandAttended = allStudents.filter(s => s.check).length;
+            const grandPct = grandTotal > 0 ? Math.round((grandAttended / grandTotal) * 100) : 0;
 
             document.getElementById('totalStudentsCount').innerText = grandTotal;
             document.getElementById('attendedStudentsCount').innerText = grandAttended;
+            document.getElementById('grandPercentage').innerText = `${grandPct}%`;
 
             // Generate Detailed Class Level Breakdown Cards
             renderClassStatsGrid();
@@ -814,9 +678,10 @@ function createJsonResponse(data) {
                 const total = allStudents.filter(s => s.classLevel === cls).length;
                 const attended = allStudents.filter(s => s.classLevel === cls && s.check).length;
                 const pct = total > 0 ? Math.round((attended / total) * 100) : 0;
+                const isCurrent = currentClassFilter === cls ? 'ring-2 ring-indigo-500 bg-indigo-50/70' : 'bg-slate-50 border-slate-100';
 
                 html += `
-                    <div onclick="filterByClass('${cls}')" class="p-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-indigo-50/50 hover:border-indigo-200 cursor-pointer transition flex flex-col justify-between">
+                    <div onclick="handleClassSelectChange('${cls}')" class="p-2.5 rounded-xl border ${isCurrent} hover:bg-indigo-50/50 hover:border-indigo-200 cursor-pointer transition flex flex-col justify-between">
                         <div class="font-bold text-slate-700 truncate">${cls}</div>
                         <div class="flex items-center justify-between mt-1 text-[11px]">
                             <span class="text-slate-500">มาแล้ว: <strong class="text-emerald-600">${attended}</strong>/${total}</span>
@@ -840,7 +705,6 @@ function createJsonResponse(data) {
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-50/80 transition text-slate-700';
 
-                // Check edited fields
                 const isPrefixEdited = item.editedFields && item.editedFields.includes('prefix');
                 const isFirstNameEdited = item.editedFields && item.editedFields.includes('firstName');
                 const isLastNameEdited = item.editedFields && item.editedFields.includes('lastName');
@@ -917,7 +781,6 @@ function createJsonResponse(data) {
                             </div>
                         </div>
 
-                        <!-- Check Status Badge -->
                         <div>
                             ${item.check 
                                 ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
@@ -950,13 +813,7 @@ function createJsonResponse(data) {
             });
         }
 
-        // Filter Actions
-        function filterByClass(cls) {
-            currentClassFilter = cls;
-            buildClassButtons();
-            filterAndRenderData();
-        }
-
+        // Status Filter Buttons (ALL / CHECKED / UNCHECKED)
         function setStatusFilter(status) {
             currentStatusFilter = status;
             document.querySelectorAll('.status-pill').forEach(btn => {
@@ -1009,7 +866,6 @@ function createJsonResponse(data) {
             const student = allStudents.find(s => s.studentId === id);
             if (!student) return;
 
-            // Track modified columns to highlight red text in UI
             if (!student.editedFields) student.editedFields = [];
             
             if (student.prefix !== prefix && !student.editedFields.includes('prefix')) student.editedFields.push('prefix');
@@ -1018,7 +874,6 @@ function createJsonResponse(data) {
             if (student.phone !== phone && !student.editedFields.includes('phone')) student.editedFields.push('phone');
             if (student.classLevel !== classLevel && !student.editedFields.includes('classLevel')) student.editedFields.push('classLevel');
 
-            // Apply local changes immediately
             student.prefix = prefix;
             student.firstName = firstName;
             student.lastName = lastName;
@@ -1059,8 +914,6 @@ function createJsonResponse(data) {
                 } finally {
                     document.getElementById('saveInfoBtn').disabled = false;
                 }
-            } else {
-                showNotification('บันทึกการแก้ไขข้อมูลในโหมดทดสอบเรียบร้อยแล้ว', 'info');
             }
         }
 
@@ -1074,11 +927,7 @@ function createJsonResponse(data) {
             document.getElementById('attStudentCode').innerText = student.studentId;
             document.getElementById('attStudentClass').innerText = student.classLevel;
 
-            if (student.check) {
-                document.getElementById('statusPresent').checked = true;
-            } else {
-                document.getElementById('statusPresent').checked = true; // Default to present for fast single-tap
-            }
+            document.getElementById('statusPresent').checked = true;
             document.getElementById('attNote').value = student.note || '';
 
             document.getElementById('attendanceModal').classList.remove('hidden');
@@ -1103,7 +952,6 @@ function createJsonResponse(data) {
             closeAttendanceModal();
             renderApp();
 
-            // Sync to Apps Script
             if (apiWebUrl) {
                 try {
                     const res = await fetch(apiWebUrl, {
@@ -1124,10 +972,8 @@ function createJsonResponse(data) {
                     }
                 } catch (err) {
                     console.error(err);
-                    showNotification('บันทึกในโหมดออฟไลน์แล้ว', 'info');
+                    showNotification('เกิดข้อผิดพลาดในการส่งข้อมูล', 'error');
                 }
-            } else {
-                showNotification('บันทึกสถานะการเข้าร่วมสำเร็จ (โหมดทดสอบ)', 'success');
             }
         }
 
@@ -1143,24 +989,10 @@ function createJsonResponse(data) {
 
         function saveApiUrl() {
             const url = document.getElementById('apiUrlInput').value.trim();
-            apiWebUrl = url;
-            localStorage.setItem('gas_app_url', url);
+            apiWebUrl = url || DEFAULT_URL;
+            localStorage.setItem('gas_app_url', apiWebUrl);
             closeApiModal();
-
-            if (url) {
-                document.getElementById('demoNoticeBar').classList.add('hidden');
-                fetchData(true);
-            } else {
-                document.getElementById('demoNoticeBar').classList.remove('hidden');
-                showNotification('ยกเลิกการเชื่อมต่อ URL แล้ว', 'info');
-            }
-        }
-
-        function copyAppsScriptCode() {
-            const code = document.getElementById('appsScriptCodeSnippet').innerText;
-            navigator.clipboard.writeText(code).then(() => {
-                showNotification('คัดลอกโค้ด Apps Script เรียบร้อยแล้ว', 'success');
-            });
+            fetchData(true);
         }
 
         // Helper Notification Toast
